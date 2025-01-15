@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <iostream>
 #include <cstdint>
+#include <cstdbool>
 
 // TODO: Remove global variables
 // These are temporary while getting our feet of the ground.
@@ -8,6 +9,9 @@ static BITMAPINFO bitmapInfo;
 static void* bitmap;
 static int bitmapWidth;
 static int bitmapHeight;
+static bool isRunning;
+static int xOffset;
+static int yOffset;
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
@@ -62,24 +66,28 @@ int APIENTRY WINAPI WinMain(HINSTANCE instance,
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
+  isRunning = true;
   MSG message = {};
   int msgResult = 0;
-  while (msgResult = GetMessage(&message, NULL, 0, 0))
+  while (isRunning)
   {
-    if (msgResult == 0)
+    while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
     {
-      break;
-    }
-    else if (msgResult == -1)
-    {
-      // TODO: Error handling
-      break;
-    }
-    else 
-    {
+      if (message.message == WM_QUIT)
+      {
+        isRunning = false;
+        break;
+      }
       TranslateMessage(&message);
       DispatchMessage(&message);
     }
+    HDC deviceContext = GetDC(window);
+    RECT clientRect = {};
+    GetClientRect(window, &clientRect);
+    BlitBitmap(deviceContext, &clientRect);
+    ReleaseDC(window, deviceContext);
+    xOffset++;
+    yOffset++;
   }
   return 0;
 }
@@ -157,11 +165,11 @@ void ResizeBitmap(int width, int height)
   
   bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   //std::cout << "Alloced\n";
-  RenderGradient();
 }
 
 void BlitBitmap(HDC deviceContext, RECT* windowRect)
 {
+  RenderGradient();
   int windowWidth = windowRect->right - windowRect->left;
   int windowHeight = windowRect->bottom - windowRect->top;
   StretchDIBits(deviceContext,
@@ -180,8 +188,8 @@ void RenderGradient()
     uint32_t* pixel = (uint32_t*)row;
     for(int x = 0; x < bitmapWidth; ++x)
     {
-      *pixel = (uint8_t)(x) << 16 | 
-               (uint8_t)(y) << 8 | 
+      *pixel = (uint8_t)(x+xOffset) << 16 | 
+               (uint8_t)(y+yOffset) << 8 | 
                255;
       ++pixel;
     }
