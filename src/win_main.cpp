@@ -20,7 +20,10 @@ int APIENTRY WINAPI WinMain(HINSTANCE instance,
   windowClass.hInstance = instance;
   windowClass.lpszClassName = CLASS_NAME;
 
-  RegisterClass(&windowClass);
+  if (!RegisterClass(&windowClass))
+  {
+    return 0;
+  }
 
   // Create window.
 
