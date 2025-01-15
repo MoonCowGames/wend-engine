@@ -24,11 +24,11 @@ int APIENTRY WINAPI WinMain(HINSTANCE instance,
 
   // Create window.
 
-  HWND window = CreateWindowExA(
+  HWND window = CreateWindowEx(
       0,
       CLASS_NAME,
       "Wend Engine",
-      WS_OVERLAPPEDWINDOW,
+      WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT,
       CW_USEDEFAULT,
       CW_USEDEFAULT,
