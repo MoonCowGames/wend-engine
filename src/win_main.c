@@ -6,19 +6,19 @@ int APIENTRY WINAPI WinMain(
 	HINSTANCE instance, HINSTANCE prevInstance, 
 	PSTR cmdLine, int cmdShow)
 {
-// Register window class.
+	// Register window class.
 
 	const char CLASS_NAME[] = "Wend Class";
 
 	WNDCLASS windowClass = {};
-	windowClass.style = CS_HREDRAW | CS_VREDRAW;
+	windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	windowClass.lpfnWndProc = WindowProc; // to impl.
 	windowClass.hInstance = instance;
 	windowClass.lpszClassName = CLASS_NAME;
 
 	RegisterClass(&windowClass);
 
-// Create window.
+	// Create window.
 
 	HWND window = CreateWindowExA(
 			0,
