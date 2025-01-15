@@ -14,7 +14,7 @@ LRESULT CALLBACK WindowProc(HWND window,
                             WPARAM wParam, 
                             LPARAM lParam);
 void ResizeBitmap(int width, int height);
-void GreenBitmap();
+void RenderGradient();
 void BlitBitmap(HDC deviceContext, RECT* windowRect);
 
 int APIENTRY WINAPI WinMain(HINSTANCE instance, 
@@ -127,7 +127,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
       RECT clientRect = {};
       GetClientRect(window, &clientRect);
       BlitBitmap(deviceContext, &clientRect);
-
       EndPaint(window, &painter);
       return 0;
     }
@@ -158,7 +157,7 @@ void ResizeBitmap(int width, int height)
   
   bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   //std::cout << "Alloced\n";
-  GreenBitmap();
+  RenderGradient();
 }
 
 void BlitBitmap(HDC deviceContext, RECT* windowRect)
@@ -172,7 +171,7 @@ void BlitBitmap(HDC deviceContext, RECT* windowRect)
                 DIB_RGB_COLORS, SRCCOPY);
 }
 
-void GreenBitmap()
+void RenderGradient()
 {
   int pitch = bitmapWidth*4;
   uint8_t* row = (uint8_t*)bitmap;
@@ -181,7 +180,9 @@ void GreenBitmap()
     uint32_t* pixel = (uint32_t*)row;
     for(int x = 0; x < bitmapWidth; ++x)
     {
-      *pixel = 0x0000FF00;
+      *pixel = (uint8_t)(x) << 16 | 
+               (uint8_t)(y) << 8 | 
+               255;
       ++pixel;
     }
     row += pitch;
