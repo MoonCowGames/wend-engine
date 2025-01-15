@@ -51,10 +51,23 @@ int APIENTRY WINAPI WinMain(HINSTANCE instance,
   UpdateWindow(window);
 
   MSG message = {};
-  while (GetMessage(&message, NULL, 0, 0) > 0)
+  int msgResult = 0;
+  while (msgResult = GetMessage(&message, NULL, 0, 0))
   {
-    TranslateMessage(&message);
-    DispatchMessage(&message);
+    if (msgResult == 0)
+    {
+      break;
+    }
+    else if (msgResult == -1)
+    {
+      // TODO: Error handling
+      break;
+    }
+    else 
+    {
+      TranslateMessage(&message);
+      DispatchMessage(&message);
+    }
   }
   return 0;
 }
