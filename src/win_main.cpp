@@ -2,14 +2,20 @@
 #include <iostream>
 #include <cstdint>
 
-static void* bitmap;
+// TODO: Remove global variables
+// These are temporary while getting our feet of the ground.
 static BITMAPINFO bitmapInfo;
+static void* bitmap;
+static int bitmapWidth;
+static int bitmapHeight;
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
                             WPARAM wParam, 
                             LPARAM lParam);
-void ResizeDIBSection(int width, int height);
+void ResizeBitmap(int width, int height);
+void GreenBitmap();
+void BlitBitmap(HDC deviceContext, RECT* windowRect);
 
 int APIENTRY WINAPI WinMain(HINSTANCE instance, 
                             HINSTANCE prevInstance, 
@@ -89,7 +95,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
       int width = clientRect.right;
       int height = clientRect.bottom;
       //std::cout << width << ", " << height << "\n";
-      ResizeDIBSection(width, height);
+      ResizeBitmap(width, height);
       return 0;
     }
     case WM_CREATE:
@@ -118,9 +124,9 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
       PAINTSTRUCT painter;
       HDC deviceContext = BeginPaint(window, &painter);
 
-      // All painting occurs here, between BeginPaint and EndPaint.
-
-      FillRect(deviceContext, &painter.rcPaint, (HBRUSH) (COLOR_WINDOW+1));
+      RECT clientRect = {};
+      GetClientRect(window, &clientRect);
+      BlitBitmap(deviceContext, &clientRect);
 
       EndPaint(window, &painter);
       return 0;
@@ -136,17 +142,48 @@ void ResizeBitmap(int width, int height)
     VirtualFree(bitmap, 0, MEM_RELEASE);
     //std::cout << "Freed\n";
   }
+
+  bitmapWidth = width;
+  bitmapHeight = height;
   
   bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-  bitmapInfo.bmiHeader.biWidth = width;
-  bitmapInfo.bmiHeader.biHeight = -height;
+  bitmapInfo.bmiHeader.biWidth = bitmapWidth;
+  bitmapInfo.bmiHeader.biHeight = -bitmapHeight;
   bitmapInfo.bmiHeader.biPlanes = 1;
   bitmapInfo.bmiHeader.biBitCount = 32;
   bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
   const int bytesPerPixel = 4;
-  int bitmapSize = (width * height) * bytesPerPixel;
+  int bitmapSize = (bitmapWidth * bitmapHeight) * bytesPerPixel;
   
   bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   //std::cout << "Alloced\n";
+  GreenBitmap();
+}
+
+void BlitBitmap(HDC deviceContext, RECT* windowRect)
+{
+  int windowWidth = windowRect->right - windowRect->left;
+  int windowHeight = windowRect->bottom - windowRect->top;
+  StretchDIBits(deviceContext,
+                0, 0, bitmapWidth, bitmapHeight,
+                0, 0, windowWidth, windowHeight,
+                bitmap, &bitmapInfo,
+                DIB_RGB_COLORS, SRCCOPY);
+}
+
+void GreenBitmap()
+{
+  int pitch = bitmapWidth*4;
+  uint8_t* row = (uint8_t*)bitmap;
+  for(int y = 0; y < bitmapHeight; ++y)
+  {
+    uint32_t* pixel = (uint32_t*)row;
+    for(int x = 0; x < bitmapWidth; ++x)
+    {
+      *pixel = 0x0000FF00;
+      ++pixel;
+    }
+    row += pitch;
+  }
 }
