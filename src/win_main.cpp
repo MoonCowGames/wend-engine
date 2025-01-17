@@ -22,7 +22,7 @@ LRESULT CALLBACK WindowProc(HWND window,
                             UINT message, 
                             WPARAM wParam, 
                             LPARAM lParam);
-                            
+
 void ResizeBuffer(Buffer* buffer, BITMAPINFO* bitmapInfo, int width, int height);
 void RenderGradient(Buffer* buffer, int xOffset, int yOffset);
 void BlitBitmap(HDC deviceContext, 
@@ -85,7 +85,6 @@ int WINAPI WinMain(HINSTANCE instance,
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
-    std::cout << appState->buffer.bitmap;
   int xOffset = 0;
   int yOffset = 0;
   while (appState->isRunning)
