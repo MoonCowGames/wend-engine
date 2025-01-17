@@ -32,8 +32,8 @@ namespace win32
                   BITMAPINFO* bitmapInfo)
   {
     StretchDIBits(deviceContext,
-                  0, 0, buffer->width, buffer->height,
                   0, 0, clientRect->right, clientRect->bottom,
+                  0, 0, buffer->width, buffer->height,
                   buffer->bitmap, bitmapInfo,
                   DIB_RGB_COLORS, SRCCOPY);
   }
