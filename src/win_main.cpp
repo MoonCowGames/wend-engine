@@ -73,6 +73,9 @@ int WINAPI WinMain(HINSTANCE instance,
                   PSTR cmdLine,
                   int cmdShow)
 {
+  int width = 1280;
+  int height = 720;
+
   win32::StateInfo* appState = 
       (win32::StateInfo*)malloc(sizeof(win32::StateInfo));
   appState->isRunning = true;
@@ -80,7 +83,13 @@ int WINAPI WinMain(HINSTANCE instance,
   appState->bitmapInfo.bmiHeader.biPlanes = 1;
   appState->bitmapInfo.bmiHeader.biBitCount = 32;
   appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
+  appState->bitmapInfo.bmiHeader.biWidth = width;
+  appState->bitmapInfo.bmiHeader.biHeight = -height;
 
+  appState->buffer.width = width;
+  appState->buffer.height = height;
+
+  render::ResizeFramebuffer(&(appState->buffer), width, height);
   // Register window class.
 
   const char CLASS_NAME[] = "Wend Class";
@@ -105,8 +114,8 @@ int WINAPI WinMain(HINSTANCE instance,
       WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT,
       CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
+      1280,
+      720,
       NULL,
       NULL,
       instance,
@@ -170,13 +179,6 @@ LRESULT CALLBACK WindowProc(HWND window,
   {
     case WM_SIZE:
     {
-
-      RECT clientRect;
-      GetClientRect(window, &clientRect);
-      state->bitmapInfo.bmiHeader.biWidth = clientRect.right;
-      state->bitmapInfo.bmiHeader.biHeight = -clientRect.bottom;
-      render::ResizeFramebuffer(&(state->buffer), 
-                              clientRect.right, clientRect.bottom);
       return 0;
     }
     case WM_ACTIVATEAPP:
