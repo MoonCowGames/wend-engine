@@ -4,43 +4,79 @@
 #include <cstdlib>
 #include <cstdbool>
 
-struct Buffer
-{
-  int width;
-  int height;
-  void* bitmap;
-};
+#include "framebuffer/framebuffer.h"
 
-struct StateInfo
+namespace win32
 {
-  bool isRunning;
-  BITMAPINFO bitmapInfo;
-  Buffer buffer;
-};
+  // TODO: Extract to module
+  // StateInfo (consider renaming to Application) defines application state.
+  // It is inteded for crossplatform usage, and will need to be extracted into its own header. 
+  // We can implement Win32 specific struct using preprocessor directives.
+  struct StateInfo
+  {
+    bool isRunning;
+    BITMAPINFO bitmapInfo;
+    render::Framebuffer buffer;
+  };
+
+  void RenderGradient(render::Framebuffer* buffer, int xOffset, int yOffset);
+  void BlitBitmap(HDC deviceContext, 
+                  RECT* clientRect, 
+                  render::Framebuffer* buffer, 
+                  BITMAPINFO* bitmapInfo);
+  StateInfo* GetAppState(HWND window);
+
+  void BlitBitmap(HDC deviceContext, 
+                  RECT* clientRect, 
+                  render::Framebuffer* buffer, 
+                  BITMAPINFO* bitmapInfo)
+  {
+    StretchDIBits(deviceContext,
+                  0, 0, buffer->width, buffer->height,
+                  0, 0, clientRect->right, clientRect->bottom,
+                  buffer->bitmap, bitmapInfo,
+                  DIB_RGB_COLORS, SRCCOPY);
+  }
+
+  void RenderGradient(render::Framebuffer* buffer, int xOffset, int yOffset)
+  {
+    int pitch = buffer->width*4;
+    uint8_t* row = (uint8_t*)buffer->bitmap;
+    for(int y = 0; y < buffer->height; ++y)
+    {
+      uint32_t* pixel = (uint32_t*)row;
+      for(int x = 0; x < buffer->width; ++x)
+      {
+        *pixel = (uint8_t)(x+xOffset) << 16 | 
+                (uint8_t)(y+yOffset) << 8 | 
+                255;
+        ++pixel;
+      }
+      row += pitch;
+    }
+  }
+
+  StateInfo* GetAppState(HWND window)
+  {
+    StateInfo* state = (StateInfo*)(GetWindowLongPtr(window, GWLP_USERDATA));
+    return state;
+  }
+}
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
                             WPARAM wParam, 
                             LPARAM lParam);
 
-void ResizeBuffer(Buffer* buffer, BITMAPINFO* bitmapInfo, int width, int height);
-void RenderGradient(Buffer* buffer, int xOffset, int yOffset);
-void BlitBitmap(HDC deviceContext, 
-                RECT* windowRect, 
-                Buffer* buffer, 
-                BITMAPINFO* bitmapInfo);
-StateInfo* GetAppState(HWND window);
-
 int WINAPI WinMain(HINSTANCE instance, 
-                   HINSTANCE prevInstance, 
-                   PSTR cmdLine,
-                   int cmdShow)
+                  HINSTANCE prevInstance, 
+                  PSTR cmdLine,
+                  int cmdShow)
 {
-  StateInfo* appState = (StateInfo*)malloc(sizeof(StateInfo));
+  win32::StateInfo* appState = 
+      (win32::StateInfo*)malloc(sizeof(win32::StateInfo));
   appState->isRunning = true;
   appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
-  appState->bitmapInfo.bmiHeader.biWidth = 0;
-  appState->bitmapInfo.bmiHeader.biHeight = 0;
   appState->bitmapInfo.bmiHeader.biPlanes = 1;
   appState->bitmapInfo.bmiHeader.biBitCount = 32;
   appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
@@ -98,13 +134,13 @@ int WINAPI WinMain(HINSTANCE instance,
     
     xOffset++;
     yOffset++;
-    RenderGradient(&(appState->buffer), xOffset, yOffset);
+    win32::RenderGradient(&(appState->buffer), xOffset, yOffset);
     
     HDC deviceContext = GetDC(window);
     RECT clientRect = {};
     GetClientRect(window, &clientRect);
-    BlitBitmap(deviceContext, &clientRect, 
-               &(appState->buffer), &(appState->bitmapInfo));
+    win32::BlitBitmap(deviceContext, &clientRect, 
+              &(appState->buffer), &(appState->bitmapInfo));
     ReleaseDC(window, deviceContext);
   }
 
@@ -118,27 +154,29 @@ LRESULT CALLBACK WindowProc(HWND window,
                             WPARAM wParam, 
                             LPARAM lParam)
 {
-  StateInfo* state = NULL;
+  win32::StateInfo* state = NULL;
   if (message == WM_CREATE)
   {
     CREATESTRUCT* create = (CREATESTRUCT*)lParam;
-    state = (StateInfo*)(create->lpCreateParams);
+    state = (win32::StateInfo*)(create->lpCreateParams);
     SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)state);
   }
   else
   {
-    state = GetAppState(window);
+    state = win32::GetAppState(window);
   }
 
   switch (message)
   {
     case WM_SIZE:
     {
+
       RECT clientRect;
       GetClientRect(window, &clientRect);
-      int width = clientRect.right;
-      int height = clientRect.bottom;
-      ResizeBuffer(&(state->buffer), &(state->bitmapInfo), width, height);
+      state->bitmapInfo.bmiHeader.biWidth = clientRect.right;
+      state->bitmapInfo.bmiHeader.biHeight = -clientRect.bottom;
+      render::ResizeFramebuffer(&(state->buffer), 
+                              clientRect.right, clientRect.bottom);
       return 0;
     }
     case WM_ACTIVATEAPP:
@@ -147,15 +185,16 @@ LRESULT CALLBACK WindowProc(HWND window,
     }
     case WM_CLOSE:
     {
-      //if (MessageBox(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
-      //{
-      DestroyWindow(window);
-      //}
+      if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
+      {
+        DestroyWindow(window);
+      }
       return 0;
     }
     case WM_DESTROY:
     {
       state->isRunning = false;
+      PostQuitMessage(0);
       return 0;
     }
     case WM_PAINT:
@@ -165,68 +204,11 @@ LRESULT CALLBACK WindowProc(HWND window,
 
       RECT clientRect = {};
       GetClientRect(window, &clientRect);
-      BlitBitmap(deviceContext, &clientRect, 
-                 &(state->buffer), &(state->bitmapInfo));
+      win32::BlitBitmap(deviceContext, &clientRect, 
+                &(state->buffer), &(state->bitmapInfo));
       EndPaint(window, &painter);
       return 0;
     }
   }
   return DefWindowProc(window, message, wParam, lParam);
-}
-
-void ResizeBuffer(Buffer* buffer, BITMAPINFO* bitmapInfo, int width, int height)
-{
-  if (buffer->bitmap)
-  {
-    VirtualFree(buffer->bitmap, 0, MEM_RELEASE);
-  }
-
-  buffer->width = width;
-  buffer->height = height;
-  
-  bitmapInfo->bmiHeader.biWidth = width;
-  bitmapInfo->bmiHeader.biHeight = -height;
-
-  const int bytesPerPixel = 4;
-  int bitmapSize = (width * height) * bytesPerPixel;
-  
-  buffer->bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
-}
-
-void BlitBitmap(HDC deviceContext, 
-                RECT* windowRect, 
-                Buffer* buffer, 
-                BITMAPINFO* bitmapInfo)
-{
-  int windowWidth = windowRect->right - windowRect->left;
-  int windowHeight = windowRect->bottom - windowRect->top;
-  StretchDIBits(deviceContext,
-                0, 0, buffer->width, buffer->height,
-                0, 0, windowWidth, windowHeight,
-                buffer->bitmap, bitmapInfo,
-                DIB_RGB_COLORS, SRCCOPY);
-}
-
-void RenderGradient(Buffer* buffer, int xOffset, int yOffset)
-{
-  int pitch = buffer->width*4;
-  uint8_t* row = (uint8_t*)buffer->bitmap;
-  for(int y = 0; y < buffer->height; ++y)
-  {
-    uint32_t* pixel = (uint32_t*)row;
-    for(int x = 0; x < buffer->width; ++x)
-    {
-      *pixel = (uint8_t)(x+xOffset) << 16 | 
-               (uint8_t)(y+yOffset) << 8 | 
-               255;
-      ++pixel;
-    }
-    row += pitch;
-  }
-}
-
-StateInfo* GetAppState(HWND window)
-{
-  StateInfo* state = (StateInfo*)(GetWindowLongPtr(window, GWLP_USERDATA));
-  return state;
 }
