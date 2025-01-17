@@ -5,26 +5,17 @@
 #include <cstdbool>
 
 #include "framebuffer/framebuffer.h"
+#include "application/application.h"
+#include "input/input.h"
 
 namespace win32
 {
-  // TODO: Extract to module
-  // StateInfo (consider renaming to Application) defines application state.
-  // It is inteded for crossplatform usage, and will need to be extracted into its own header. 
-  // We can implement Win32 specific struct using preprocessor directives.
-  struct StateInfo
-  {
-    bool isRunning;
-    BITMAPINFO bitmapInfo;
-    render::Framebuffer buffer;
-  };
-
   void RenderGradient(render::Framebuffer* buffer, int xOffset, int yOffset);
   void BlitBitmap(HDC deviceContext, 
                   RECT* clientRect, 
                   render::Framebuffer* buffer, 
                   BITMAPINFO* bitmapInfo);
-  StateInfo* GetAppState(HWND window);
+  App::Application* GetAppState(HWND window);
 
   void BlitBitmap(HDC deviceContext, 
                   RECT* clientRect, 
@@ -56,10 +47,9 @@ namespace win32
     }
   }
 
-  StateInfo* GetAppState(HWND window)
+  App::Application* GetAppState(HWND window)
   {
-    StateInfo* state = (StateInfo*)(GetWindowLongPtr(window, GWLP_USERDATA));
-    return state;
+    return (App::Application*)(GetWindowLongPtr(window,GWLP_USERDATA));
   }
 }
 
@@ -76,20 +66,7 @@ int WINAPI WinMain(HINSTANCE instance,
   int width = 1280;
   int height = 720;
 
-  win32::StateInfo* appState = 
-      (win32::StateInfo*)malloc(sizeof(win32::StateInfo));
-  appState->isRunning = true;
-  appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
-  appState->bitmapInfo.bmiHeader.biPlanes = 1;
-  appState->bitmapInfo.bmiHeader.biBitCount = 32;
-  appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
-  appState->bitmapInfo.bmiHeader.biWidth = width;
-  appState->bitmapInfo.bmiHeader.biHeight = -height;
-
-  appState->buffer.width = width;
-  appState->buffer.height = height;
-
-  render::ResizeFramebuffer(&(appState->buffer), width, height);
+  App::Application* app = App::InitApplication(width, height);
   // Register window class.
 
   const char CLASS_NAME[] = "Wend Class";
@@ -119,7 +96,7 @@ int WINAPI WinMain(HINSTANCE instance,
       NULL,
       NULL,
       instance,
-      appState
+      app
   );
 
   if (window == NULL)
@@ -132,7 +109,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
   int xOffset = 0;
   int yOffset = 0;
-  while (appState->isRunning)
+  while (app->isRunning)
   {
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
@@ -141,20 +118,43 @@ int WINAPI WinMain(HINSTANCE instance,
       DispatchMessage(&message);
     }
     
-    xOffset++;
-    yOffset++;
-    win32::RenderGradient(&(appState->buffer), xOffset, yOffset);
+    uint8_t* keyState = app->keyboard.keyState;
+
+    for (int keyIndex = 0; keyIndex < 256; keyIndex++)
+    {
+      if (Input::CheckKeyIsDown(Input::GetKeyState(keyState, keyIndex)))
+      {
+        if (keyIndex == Key::W)
+        {
+          yOffset++;
+        }
+        if (keyIndex == Key::S)
+        {
+          yOffset--;
+        }   
+        if (keyIndex == Key::A)
+        {
+          xOffset++;
+        }
+        if (keyIndex == Key::D)
+        {
+          xOffset--;
+        }   
+      }
+    }
+
+    win32::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     HDC deviceContext = GetDC(window);
     RECT clientRect = {};
     GetClientRect(window, &clientRect);
     win32::BlitBitmap(deviceContext, &clientRect, 
-              &(appState->buffer), &(appState->bitmapInfo));
+              &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
   }
 
-  free(appState);
-  appState = NULL;
+  free(app);
+  app = NULL;
   return 0;
 }
 
@@ -163,16 +163,16 @@ LRESULT CALLBACK WindowProc(HWND window,
                             WPARAM wParam, 
                             LPARAM lParam)
 {
-  win32::StateInfo* state = NULL;
+  App::Application* appState = NULL;
   if (message == WM_CREATE)
   {
     CREATESTRUCT* create = (CREATESTRUCT*)lParam;
-    state = (win32::StateInfo*)(create->lpCreateParams);
-    SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)state);
+    appState = (App::Application*)(create->lpCreateParams);
+    SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)appState);
   }
   else
   {
-    state = win32::GetAppState(window);
+    appState = win32::GetAppState(window);
   }
 
   switch (message)
@@ -181,10 +181,12 @@ LRESULT CALLBACK WindowProc(HWND window,
     {
       return 0;
     }
+
     case WM_ACTIVATEAPP:
     {
       return 0;
     }
+
     case WM_CLOSE:
     {
       if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
@@ -193,12 +195,14 @@ LRESULT CALLBACK WindowProc(HWND window,
       }
       return 0;
     }
+
     case WM_DESTROY:
     {
-      state->isRunning = false;
+      appState->isRunning = false;
       PostQuitMessage(0);
       return 0;
     }
+
     case WM_PAINT:
     {
       PAINTSTRUCT painter;
@@ -207,9 +211,45 @@ LRESULT CALLBACK WindowProc(HWND window,
       RECT clientRect = {};
       GetClientRect(window, &clientRect);
       win32::BlitBitmap(deviceContext, &clientRect, 
-                &(state->buffer), &(state->bitmapInfo));
+                &(appState->buffer), &(appState->bitmapInfo));
       EndPaint(window, &painter);
       return 0;
+    }
+
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    {
+      bool wasDown = (lParam & (1 << 30)) != 0;
+      bool isDown = (lParam & (1 << 31)) == 0;
+
+      if (isDown == wasDown)
+      {
+        return 0;
+      }
+
+      if (wParam == VK_ESCAPE)
+      {
+        if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
+        {
+          DestroyWindow(window);
+        }
+      }
+
+
+      uint8_t state = (wasDown << 1) | isDown;
+      /* std::map<size_t, Key>::iterator it;
+      for(it = keyMap.begin();
+          it != keyMap.end();
+          ++it)
+      {
+        std::cout << it->first << " => " << it->second << '\n';
+      } */
+
+      Input::SetKeyState(appState->keyboard.keyState, 
+                         keyMap.at(wParam), 
+                         state);
     }
   }
   return DefWindowProc(window, message, wParam, lParam);
