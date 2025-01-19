@@ -120,29 +120,6 @@ int WINAPI WinMain(HINSTANCE instance,
     
     uint8_t* keyState = app->keyboard.keyState;
 
-    for (int keyIndex = 0; keyIndex < 256; keyIndex++)
-    {
-      if (Input::CheckKeyIsDown(Input::GetKeyState(keyState, keyIndex)))
-      {
-        if (keyIndex == Key::W)
-        {
-          yOffset++;
-        }
-        if (keyIndex == Key::S)
-        {
-          yOffset--;
-        }   
-        if (keyIndex == Key::A)
-        {
-          xOffset++;
-        }
-        if (keyIndex == Key::D)
-        {
-          xOffset--;
-        }   
-      }
-    }
-
     win32::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     HDC deviceContext = GetDC(window);
@@ -221,10 +198,12 @@ LRESULT CALLBACK WindowProc(HWND window,
     case WM_KEYDOWN:
     case WM_KEYUP:
     {
-      bool wasDown = (lParam & (1 << 30)) != 0;
-      bool isDown = (lParam & (1 << 31)) == 0;
+      uint8_t* keyState =  appState->keyboard.keyState;
+      const std::map<size_t, Key> map = appState->keyboard.keyMap;
 
-      if (isDown == wasDown)
+      // Prevents out of bounds access in map
+      // Therefore, only registered keys are usable in map
+      if (map.find(wParam) == map.end())
       {
         return 0;
       }
@@ -238,18 +217,15 @@ LRESULT CALLBACK WindowProc(HWND window,
       }
 
 
-      uint8_t state = (wasDown << 1) | isDown;
-      /* std::map<size_t, Key>::iterator it;
-      for(it = keyMap.begin();
-          it != keyMap.end();
-          ++it)
+      if ((lParam & (1 << 31)) == 0) 
       {
-        std::cout << it->first << " => " << it->second << '\n';
-      } */
-
-      Input::SetKeyState(appState->keyboard.keyState, 
-                         keyMap.at(wParam), 
-                         state);
+        keyState[map.at(wParam)] |= State::IS_PRESSED;
+      }
+      else 
+      {
+        keyState[map.at(wParam)] ^= State::IS_PRESSED; 
+      }
+      return 0;
     }
   }
   return DefWindowProc(window, message, wParam, lParam);

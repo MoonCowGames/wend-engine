@@ -9,10 +9,6 @@
 
 namespace App
 {
-  // TODO: Extract to module
-  // StateInfo (consider renaming to Application) defines application state.
-  // It is inteded for crossplatform usage, and will need to be extracted into its own header. 
-  // We can implement Win32 specific struct using preprocessor directives.
   struct Application
   {
     Input::Keyboard keyboard;
