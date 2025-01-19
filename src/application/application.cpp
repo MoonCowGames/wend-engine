@@ -15,7 +15,7 @@ namespace App
 
     app->buffer.width = width;
     app->buffer.height = height;
-    render::ResizeFramebuffer(&(app->buffer), width, height);
+    Render::ResizeFramebuffer(&(app->buffer), width, height);
     
     for (int index = 0; index < 256; index++)
     {

@@ -14,7 +14,7 @@ namespace App
     Input::Keyboard keyboard;
 
     // Rendering
-    render::Framebuffer buffer;
+    Render::Framebuffer buffer;
     BITMAPINFO bitmapInfo;
 
     // State

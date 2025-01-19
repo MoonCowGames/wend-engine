@@ -10,41 +10,24 @@
 
 namespace win32
 {
-  void RenderGradient(render::Framebuffer* buffer, int xOffset, int yOffset);
-  void BlitBitmap(HDC deviceContext, 
-                  RECT* clientRect, 
-                  render::Framebuffer* buffer, 
+  void BlitBuffer(HDC deviceContext, 
+                  HWND window,
+                  Render::Framebuffer* buffer, 
                   BITMAPINFO* bitmapInfo);
   App::Application* GetAppState(HWND window);
 
-  void BlitBitmap(HDC deviceContext, 
-                  RECT* clientRect, 
-                  render::Framebuffer* buffer, 
+  void BlitBuffer(HDC deviceContext, 
+                  HWND window,
+                  Render::Framebuffer* buffer, 
                   BITMAPINFO* bitmapInfo)
   {
+    RECT clientRect = {};
+    GetClientRect(window, &clientRect);
     StretchDIBits(deviceContext,
-                  0, 0, clientRect->right, clientRect->bottom,
+                  0, 0, clientRect.right, clientRect.bottom,
                   0, 0, buffer->width, buffer->height,
                   buffer->bitmap, bitmapInfo,
                   DIB_RGB_COLORS, SRCCOPY);
-  }
-
-  void RenderGradient(render::Framebuffer* buffer, int xOffset, int yOffset)
-  {
-    int pitch = buffer->width*4;
-    uint8_t* row = (uint8_t*)buffer->bitmap;
-    for(int y = 0; y < buffer->height; ++y)
-    {
-      uint32_t* pixel = (uint32_t*)row;
-      for(int x = 0; x < buffer->width; ++x)
-      {
-        *pixel = (uint8_t)(x+xOffset) << 16 | 
-                (uint8_t)(y+yOffset) << 8 | 
-                255;
-        ++pixel;
-      }
-      row += pitch;
-    }
   }
 
   App::Application* GetAppState(HWND window)
@@ -120,12 +103,11 @@ int WINAPI WinMain(HINSTANCE instance,
     
     uint8_t* keyState = app->keyboard.keyState;
 
-    win32::RenderGradient(&(app->buffer), xOffset, yOffset);
+    Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     HDC deviceContext = GetDC(window);
-    RECT clientRect = {};
-    GetClientRect(window, &clientRect);
-    win32::BlitBitmap(deviceContext, &clientRect, 
+    
+    win32::BlitBuffer(deviceContext, window, 
               &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
   }
@@ -182,13 +164,13 @@ LRESULT CALLBACK WindowProc(HWND window,
 
     case WM_PAINT:
     {
+      // Paints on create and resize.
       PAINTSTRUCT painter;
       HDC deviceContext = BeginPaint(window, &painter);
 
-      RECT clientRect = {};
-      GetClientRect(window, &clientRect);
-      win32::BlitBitmap(deviceContext, &clientRect, 
+      win32::BlitBuffer(deviceContext, window, 
                 &(appState->buffer), &(appState->bitmapInfo));
+
       EndPaint(window, &painter);
       return 0;
     }
