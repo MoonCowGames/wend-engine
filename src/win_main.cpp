@@ -183,13 +183,6 @@ LRESULT CALLBACK WindowProc(HWND window,
       uint8_t* keyState =  appState->keyboard.keyState;
       const std::map<size_t, Key> map = appState->keyboard.keyMap;
 
-      // Prevents out of bounds access in map
-      // Therefore, only registered keys are usable in map
-      if (map.find(wParam) == map.end())
-      {
-        return 0;
-      }
-
       if (wParam == VK_ESCAPE)
       {
         if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
@@ -198,6 +191,12 @@ LRESULT CALLBACK WindowProc(HWND window,
         }
       }
 
+      // Prevents out of bounds access in map
+      // Therefore, only registered keys are usable in map
+      if (map.find(wParam) == map.end())
+      {
+        return 0;
+      }
 
       if ((lParam & (1 << 31)) == 0) 
       {
