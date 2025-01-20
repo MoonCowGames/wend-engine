@@ -102,6 +102,24 @@ int WINAPI WinMain(HINSTANCE instance,
     }
     
     uint8_t* keyState = app->keyboard.keyState;
+    Input::PoolKeyState(keyState);
+
+    if (Input::CheckKeyIsPressed(keyState[Key::W]))
+    {
+      yOffset++;
+    }
+    if (Input::CheckKeyIsPressed(keyState[Key::S]))
+    {
+      yOffset--;
+    }
+    if (Input::CheckKeyIsPressed(keyState[Key::A]))
+    {
+      xOffset++;
+    }
+    if (Input::CheckKeyIsPressed(keyState[Key::D]))
+    {
+      xOffset--;
+    }
 
     Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     

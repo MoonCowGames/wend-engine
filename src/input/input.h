@@ -219,6 +219,8 @@ namespace Input
   bool CheckKeyIsJustPressed(uint8_t);
   bool CheckKeyIsReleased(uint8_t);
   bool CheckKeyIsJustReleased(uint8_t);
+
+  void PoolKeyState(uint8_t*);
 }
 
 #endif //__WEND_INPUT_H__
