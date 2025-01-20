@@ -104,19 +104,23 @@ int WINAPI WinMain(HINSTANCE instance,
     uint8_t* keyState = app->keyboard.keyState;
     Input::PoolKeyState(keyState);
 
-    if (Input::CheckKeyIsPressed(keyState[Key::W]))
+    if (Input::CheckKeyIsPressed(keyState[Key::W]) ||
+        Input::CheckKeyIsPressed(keyState[Key::UP]))
     {
       yOffset++;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::S]))
+    if (Input::CheckKeyIsPressed(keyState[Key::S]) ||
+        Input::CheckKeyIsPressed(keyState[Key::DOWN]))
     {
       yOffset--;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::A]))
+    if (Input::CheckKeyIsPressed(keyState[Key::A]) ||
+        Input::CheckKeyIsPressed(keyState[Key::LEFT]))
     {
       xOffset++;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::D]))
+    if (Input::CheckKeyIsPressed(keyState[Key::D]) ||
+        Input::CheckKeyIsPressed(keyState[Key::RIGHT]))
     {
       xOffset--;
     }
