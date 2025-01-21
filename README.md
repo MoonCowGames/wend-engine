@@ -18,4 +18,4 @@ Wend Engine will begin life as a Windows only, software-rendered engine. Once th
 - To turn, change or adapt
 - To pursue one's way
 
-Wend Engine's purpose is to be the engine driving a game titled *Wend*. Wend is thematically relevant to the game and to personally meaningful to me.
+Wend Engine's purpose is to be the engine driving a game titled *Wend*. Wend is thematically relevant to the game and is personally meaningful to me.
