@@ -7,6 +7,7 @@
 #include "framebuffer/framebuffer.h"
 #include "application/application.h"
 #include "input/input.h"
+#include "audio/audio.h"
 
 namespace win32
 {
@@ -87,8 +88,12 @@ int WINAPI WinMain(HINSTANCE instance,
     return 0;
   }
 
+  IDirectSoundBuffer* soundBuffer = {}; 
+  Audio::InitDirectSound(&soundBuffer, window, 48000);
+
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
+
 
   int xOffset = 0;
   int yOffset = 0;
