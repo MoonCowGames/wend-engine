@@ -89,11 +89,12 @@ int WINAPI WinMain(HINSTANCE instance,
   }
 
   IDirectSoundBuffer* soundBuffer = {}; 
-  int32_t samplesPerSecond = 48000;
+  int32_t samplesPerSecond = 44100;
   int32_t bufferSize = 0;
   Audio::InitDirectSound(&soundBuffer, &bufferSize, window, samplesPerSecond);
   soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
-  
+  uint32_t runningSampleIndex = 0;
+
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
@@ -136,7 +137,7 @@ int WINAPI WinMain(HINSTANCE instance,
     Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     // TODO: Test audio buffer
-    Audio::TestAudioBuffer(soundBuffer, bufferSize, samplesPerSecond, 256);
+    Audio::TestAudioBuffer(soundBuffer, &runningSampleIndex, bufferSize, samplesPerSecond, 261);
 
     HDC deviceContext = GetDC(window);
     

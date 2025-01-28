@@ -84,11 +84,11 @@ namespace Audio
   }
 
   void TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
+                       uint32_t* runningSampleIndex,
                        int32_t bufferSize,
                        int32_t samplesPerSecond, 
                        int32_t frequency)
   {
-    uint32_t runningSampleIndex = 0; // TODO: Check when this needs to change.
     int32_t wavePeriod = samplesPerSecond/frequency;
     int32_t halfPeriod = wavePeriod >> 1;
     int32_t bytesPerSample = sizeof(int16_t)*2;
@@ -101,8 +101,8 @@ namespace Audio
       return;
     }
 
-    // modulo keeps range within bufferSize values
-    DWORD lockCursor = (runningSampleIndex * bytesPerSample) % bufferSize;
+    // Keeps range within bufferSize values
+    DWORD lockCursor = ((*runningSampleIndex) * bytesPerSample) % bufferSize;
     DWORD bytesToWrite;
 
     if (lockCursor > playCursor)
@@ -133,32 +133,32 @@ namespace Audio
 
     int16_t* sample = (int16_t *)region1;
     DWORD region1SampleCount = region1Size/bytesPerSample;
-    for (uint32_t sampleIndex = 0; sampleIndex < region1SampleCount; sampleIndex++)
+    for (uint32_t index = 0; index < region1SampleCount; index++)
     {
-      int16_t sampleValue = ((runningSampleIndex / halfPeriod) % 2) 
-                                ? 16000 : -16000;
+      int16_t sampleValue = (((*runningSampleIndex)/ halfPeriod) & 1) 
+                              ? 4000 : -4000;
       // left
       *sample = sampleValue;
       sample++;
       // right
       *sample = sampleValue;
       sample++;
-      runningSampleIndex++;
+      (*runningSampleIndex)++;
     }
     
     sample = (int16_t *)region2;
     DWORD region2SampleCount = region2Size/bytesPerSample;
-    for (uint32_t sampleIndex = 0; sampleIndex < region2SampleCount; sampleIndex++)
+    for (uint32_t index = 0; index < region2SampleCount; index++)
     {
-      int16_t sampleValue = ((runningSampleIndex / halfPeriod) % 2) 
-                                ? 4000 : -4000;
+      int16_t sampleValue = (((*runningSampleIndex) / halfPeriod) & 1) 
+                              ? 4000 : -4000;
       // left
       *sample = sampleValue;
       sample++;
       // right
       *sample = sampleValue;
       sample++;
-      runningSampleIndex++;
+      (*runningSampleIndex)++;
     }
 
     soundBuffer->Unlock(region1, region1Size, region2, region2Size);
