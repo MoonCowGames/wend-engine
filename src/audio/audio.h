@@ -8,7 +8,8 @@
 
 namespace Audio
 {
-  void InitDirectSound(IDirectSoundBuffer**, HWND, uint32_t);
+  void InitDirectSound(IDirectSoundBuffer**, int32_t*, HWND, uint32_t);
+  void TestAudioBuffer(IDirectSoundBuffer*, int32_t, int32_t, int32_t);
 }
 
 #endif //__WEND_AUDIO_H__

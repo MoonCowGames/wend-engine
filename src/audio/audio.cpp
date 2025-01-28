@@ -7,6 +7,7 @@ namespace Audio
 {
 
   void InitDirectSound(IDirectSoundBuffer** soundBuffer, 
+                       int32_t* bufferSize,
                        HWND window, 
                        uint32_t samplesPerSec)
   {
@@ -50,7 +51,7 @@ namespace Audio
     waveFormat.nAvgBytesPerSec = 
         waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
     waveFormat.cbSize = 0;
-    int32_t bufferSize = waveFormat.nAvgBytesPerSec;
+    *bufferSize = waveFormat.nAvgBytesPerSec;
 
     // Create primary buffer
     DSBUFFERDESC primaryBufferDesc;
@@ -72,7 +73,7 @@ namespace Audio
     DSBUFFERDESC secondaryBufferDesc;
     ZeroMemory(&secondaryBufferDesc, sizeof(secondaryBufferDesc));
     secondaryBufferDesc.dwSize = sizeof(secondaryBufferDesc);
-    secondaryBufferDesc.dwBufferBytes = bufferSize;
+    secondaryBufferDesc.dwBufferBytes = *bufferSize;
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
     if (directSoundObj->CreateSoundBuffer(
@@ -82,4 +83,84 @@ namespace Audio
     }
   }
 
+  void TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
+                       int32_t bufferSize,
+                       int32_t samplesPerSecond, 
+                       int32_t frequency)
+  {
+    uint32_t runningSampleIndex = 0; // TODO: Check when this needs to change.
+    int32_t wavePeriod = samplesPerSecond/frequency;
+    int32_t halfPeriod = wavePeriod >> 1;
+    int32_t bytesPerSample = sizeof(int16_t)*2;
+
+    DWORD playCursor;
+    DWORD writeCursor;
+
+    if (soundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
+    {
+      return;
+    }
+
+    // modulo keeps range within bufferSize values
+    DWORD lockCursor = (runningSampleIndex * bytesPerSample) % bufferSize;
+    DWORD bytesToWrite;
+
+    if (lockCursor > playCursor)
+    {
+      // Gets space marked ====
+      // ||==============[PC]------------[LC]================||
+      bytesToWrite = (bufferSize - lockCursor);
+      bytesToWrite += playCursor; 
+    }
+    else
+    {
+      // Gets space marked ====
+      // ||--------------[LC]============[PC]----------------||
+      bytesToWrite = playCursor - lockCursor;
+    }
+
+    void* region1;
+    DWORD region1Size;
+    void* region2;
+    DWORD region2Size;
+
+    if (soundBuffer->Lock(lockCursor, bytesToWrite,
+                          &region1, &region1Size,
+                          &region2, &region2Size, 0) < 0)
+    {
+      return;
+    }
+
+    int16_t* sample = (int16_t *)region1;
+    DWORD region1SampleCount = region1Size/bytesPerSample;
+    for (uint32_t sampleIndex = 0; sampleIndex < region1SampleCount; sampleIndex++)
+    {
+      int16_t sampleValue = ((runningSampleIndex / halfPeriod) % 2) 
+                                ? 16000 : -16000;
+      // left
+      *sample = sampleValue;
+      sample++;
+      // right
+      *sample = sampleValue;
+      sample++;
+      runningSampleIndex++;
+    }
+    
+    sample = (int16_t *)region2;
+    DWORD region2SampleCount = region2Size/bytesPerSample;
+    for (uint32_t sampleIndex = 0; sampleIndex < region2SampleCount; sampleIndex++)
+    {
+      int16_t sampleValue = ((runningSampleIndex / halfPeriod) % 2) 
+                                ? 4000 : -4000;
+      // left
+      *sample = sampleValue;
+      sample++;
+      // right
+      *sample = sampleValue;
+      sample++;
+      runningSampleIndex++;
+    }
+
+    soundBuffer->Unlock(region1, region1Size, region2, region2Size);
+  }
 }
