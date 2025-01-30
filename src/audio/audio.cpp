@@ -105,7 +105,11 @@ namespace Audio
     DWORD lockCursor = ((*runningSampleIndex) * bytesPerSample) % bufferSize;
     DWORD bytesToWrite;
 
-    if (lockCursor > playCursor)
+    if (lockCursor == playCursor)
+    {
+      bytesToWrite = bufferSize;
+    }
+    else if (lockCursor > playCursor)
     {
       // Gets space marked ====
       // ||==============[PC]------------[LC]================||
