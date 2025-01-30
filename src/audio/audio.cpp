@@ -7,11 +7,9 @@ namespace Audio
 {
 
   void InitDirectSound(IDirectSoundBuffer** soundBuffer, 
-                       int32_t* bufferSize,
                        HWND window, 
-                       uint32_t samplesPerSec)
+                       Configuration config)
   {
-
     // Get library
     HMODULE directSoundLibrary = LoadLibraryA("dsound.dll");
     if (!directSoundLibrary)
@@ -44,14 +42,13 @@ namespace Audio
     ZeroMemory(&waveFormat, sizeof(waveFormat));
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
     waveFormat.nChannels = 2;
-    waveFormat.nSamplesPerSec = samplesPerSec;
+    waveFormat.nSamplesPerSec = config.samplesPerSecond;
     waveFormat.wBitsPerSample = 16;
     waveFormat.nBlockAlign = 
         (waveFormat.nChannels * waveFormat.wBitsPerSample) / 8;
     waveFormat.nAvgBytesPerSec = 
         waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
     waveFormat.cbSize = 0;
-    *bufferSize = waveFormat.nAvgBytesPerSec;
 
     // Create primary buffer
     DSBUFFERDESC primaryBufferDesc;
@@ -73,7 +70,7 @@ namespace Audio
     DSBUFFERDESC secondaryBufferDesc;
     ZeroMemory(&secondaryBufferDesc, sizeof(secondaryBufferDesc));
     secondaryBufferDesc.dwSize = sizeof(secondaryBufferDesc);
-    secondaryBufferDesc.dwBufferBytes = *bufferSize;
+    secondaryBufferDesc.dwBufferBytes = config.bufferSize;
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
     if (directSoundObj->CreateSoundBuffer(
@@ -84,13 +81,9 @@ namespace Audio
   }
 
   void TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
-                       uint32_t* runningSampleIndex,
-                       int32_t bufferSize,
-                       int32_t samplesPerSecond, 
-                       int32_t frequency)
+                       Configuration* config)
   {
-    int32_t wavePeriod = samplesPerSecond/frequency;
-    int32_t halfPeriod = wavePeriod >> 1;
+    //int32_t halfPeriod = wavePeriod >> 1;
     int32_t bytesPerSample = sizeof(int16_t)*2;
 
     DWORD playCursor;
@@ -102,18 +95,18 @@ namespace Audio
     }
 
     // Keeps range within bufferSize values
-    DWORD lockCursor = ((*runningSampleIndex) * bytesPerSample) % bufferSize;
-    DWORD bytesToWrite;
+    DWORD lockCursor = ((config->runningSampleIndex) * bytesPerSample) % config->bufferSize;
+    DWORD bytesToWrite = 0;
 
     if (lockCursor == playCursor)
     {
-      bytesToWrite = bufferSize;
+        bytesToWrite = 0;
     }
     else if (lockCursor > playCursor)
     {
       // Gets space marked ====
       // ||==============[PC]------------[LC]================||
-      bytesToWrite = (bufferSize - lockCursor);
+      bytesToWrite = (config->bufferSize - lockCursor);
       bytesToWrite += playCursor; 
     }
     else
@@ -123,6 +116,20 @@ namespace Audio
       bytesToWrite = playCursor - lockCursor;
     }
 
+    FillBuffer(soundBuffer, config, lockCursor, bytesToWrite);
+    
+  }
+
+  int16_t SineWave(float32 time, int32_t volume)
+  {
+    return (int16_t)(sinf(time)*(float32)volume);
+  }
+
+  void FillBuffer(IDirectSoundBuffer* soundBuffer, 
+                  Configuration* config, 
+                  DWORD lockCursor, 
+                  DWORD bytesToWrite)
+  {
     void* region1;
     DWORD region1Size;
     void* region2;
@@ -136,33 +143,34 @@ namespace Audio
     }
 
     int16_t* sample = (int16_t *)region1;
-    DWORD region1SampleCount = region1Size/bytesPerSample;
+    DWORD region1SampleCount = region1Size/config->bytesPerSample;
     for (uint32_t index = 0; index < region1SampleCount; index++)
     {
-      int16_t sampleValue = (((*runningSampleIndex)/ halfPeriod) & 1) 
-                              ? 4000 : -4000;
+      float32 time = 2.0f * PI32 * ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
+      int16_t sampleValue = sinf(time) * 4000;
       // left
       *sample = sampleValue;
       sample++;
       // right
       *sample = sampleValue;
       sample++;
-      (*runningSampleIndex)++;
+      (config->runningSampleIndex)++;
     }
     
     sample = (int16_t *)region2;
-    DWORD region2SampleCount = region2Size/bytesPerSample;
+    DWORD region2SampleCount = region2Size/config->bytesPerSample;
     for (uint32_t index = 0; index < region2SampleCount; index++)
     {
-      int16_t sampleValue = (((*runningSampleIndex) / halfPeriod) & 1) 
-                              ? 4000 : -4000;
+      float32 time = 2.0f * PI32 * 
+          ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
+      int16_t sampleValue = sinf(time) * 4000;
       // left
       *sample = sampleValue;
       sample++;
       // right
       *sample = sampleValue;
       sample++;
-      (*runningSampleIndex)++;
+      (config->runningSampleIndex)++;
     }
 
     soundBuffer->Unlock(region1, region1Size, region2, region2Size);
