@@ -4,6 +4,21 @@
 #include <cstdint>
 #include <map>
 #include <windows.h>
+#include <xinput.h>
+
+#define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
+typedef XINPUT_GET_STATE(fn_XInputGetState);
+/* XINPUT_GET_STATE(XInputGetStateStub)
+{
+  return 0;
+} */
+
+#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
+typedef XINPUT_SET_STATE(fn_XInputSetState);
+/* XINPUT_SET_STATE(XInputSetStateStub)
+{
+  return 0;
+} */
 
 enum State
 {
@@ -221,6 +236,8 @@ namespace Input
   bool CheckKeyIsJustReleased(uint8_t);
 
   void PoolKeyState(uint8_t*);
+
+  void InitXInput(fn_XInputGetState**, fn_XInputSetState**);
 }
 
 #endif //__WEND_INPUT_H__
