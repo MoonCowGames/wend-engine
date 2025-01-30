@@ -7,6 +7,7 @@
 #include "framebuffer/framebuffer.h"
 #include "application/application.h"
 #include "input/input.h"
+#include "audio/audio.h"
 
 namespace win32
 {
@@ -87,6 +88,21 @@ int WINAPI WinMain(HINSTANCE instance,
     return 0;
   }
 
+  IDirectSoundBuffer* soundBuffer = {}; 
+  Audio::Configuration audioCfg = {};
+  audioCfg.samplesPerSecond = 44100;
+  audioCfg.frequency = 261;
+  audioCfg.volume = 4000;
+  audioCfg.wavePeriod = audioCfg.samplesPerSecond / audioCfg.frequency;
+  audioCfg.bytesPerSample = sizeof(int16_t)*2;
+  audioCfg.bufferSize = audioCfg.samplesPerSecond * audioCfg.bytesPerSample;
+  audioCfg.runningSampleIndex = 0;
+
+
+  Audio::InitDirectSound(&soundBuffer, window, audioCfg);
+  Audio::FillBuffer(soundBuffer, &audioCfg, 0, audioCfg.bufferSize);
+  soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
+
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
@@ -127,8 +143,9 @@ int WINAPI WinMain(HINSTANCE instance,
 
     Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     
+    Audio::TestAudioBuffer(soundBuffer, &audioCfg);
+
     HDC deviceContext = GetDC(window);
-    
     win32::BlitBuffer(deviceContext, window, 
               &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
