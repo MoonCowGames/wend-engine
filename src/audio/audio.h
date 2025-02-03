@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: audio.h                                                                 |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #ifndef __WEND_AUDIO_H__
 #define __WEND_AUDIO_H__
 

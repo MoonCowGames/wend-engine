@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: win_main.cpp                                                            |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #include <windows.h>
 #include <iostream>
 #include <iomanip>
@@ -11,14 +19,21 @@
 #include "input/input.h"
 #include "audio/audio.h"
 
-namespace win32
+namespace Win32
 {
   void BlitBuffer(HDC deviceContext, 
                   HWND window,
                   Render::Framebuffer* buffer, 
                   BITMAPINFO* bitmapInfo);
-  App::Application* GetAppState(HWND window);
 
+  /**
+   * Displays the framebuffer on the window.
+   * 
+   * @param deviceContext A Windows structure required for displaying graphics.
+   * @param window The handle to the GUI window.
+   * @param buffer The framebuffer to be displayed.
+   * @param bitmapInfo Information Windows requires to display the framebuffer.
+   */
   void BlitBuffer(HDC deviceContext, 
                   HWND window,
                   Render::Framebuffer* buffer, 
@@ -32,11 +47,6 @@ namespace win32
                   buffer->bitmap, bitmapInfo,
                   DIB_RGB_COLORS, SRCCOPY);
   }
-
-  App::Application* GetAppState(HWND window)
-  {
-    return (App::Application*)(GetWindowLongPtr(window,GWLP_USERDATA));
-  }
 }
 
 LRESULT CALLBACK WindowProc(HWND window, 
@@ -44,6 +54,14 @@ LRESULT CALLBACK WindowProc(HWND window,
                             WPARAM wParam, 
                             LPARAM lParam);
 
+/**
+ * Windows GUI entrypoint.
+ * 
+ * @param instance A handle to the program's instance.
+ * @param prevInstance UNUSED.
+ * @param cmdLine UNUSED.
+ * @param cmdShow Specifies how the window should be displayed. Used only when required.
+ */
 int WINAPI WinMain(HINSTANCE instance, 
                   HINSTANCE prevInstance, 
                   PSTR cmdLine,
@@ -53,8 +71,8 @@ int WINAPI WinMain(HINSTANCE instance,
   int height = 720;
 
   App::Application* app = App::InitApplication(width, height);
+  
   // Register window class.
-
   const char CLASS_NAME[] = "Wend Class";
 
   WNDCLASSA windowClass = {};
@@ -100,7 +118,6 @@ int WINAPI WinMain(HINSTANCE instance,
   audioCfg.bufferSize = audioCfg.samplesPerSecond * audioCfg.bytesPerSample;
   audioCfg.runningSampleIndex = 0;
 
-
   Audio::InitDirectSound(&soundBuffer, window, audioCfg);
   Audio::FillBuffer(soundBuffer, &audioCfg, 0, audioCfg.bufferSize);
   soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
@@ -130,7 +147,6 @@ int WINAPI WinMain(HINSTANCE instance,
   int yOffset = 0;
   while (app->isRunning)
   {
-
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
     {
@@ -222,7 +238,7 @@ int WINAPI WinMain(HINSTANCE instance,
     Audio::TestAudioBuffer(soundBuffer, &audioCfg);
 
     HDC deviceContext = GetDC(window);
-    win32::BlitBuffer(deviceContext, window, 
+    Win32::BlitBuffer(deviceContext, window, 
               &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
 
@@ -238,6 +254,15 @@ int WINAPI WinMain(HINSTANCE instance,
   return 0;
 }
 
+/**
+ * Callback function required by Windows to allow GUI to recieve and interpret
+ * messages from the OS.
+ * 
+ * @param window The handle to the GUI window that the callback is bound to.
+ * @param message A value describing the type of message being received.
+ * @param wParam A value determined by Windows and `message`.
+ * @param lParam A value determined by Windows and `message`.
+ */
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
                             WPARAM wParam, 
@@ -252,7 +277,7 @@ LRESULT CALLBACK WindowProc(HWND window,
   }
   else
   {
-    appState = win32::GetAppState(window);
+    appState = (App::Application*)(GetWindowLongPtr(window,GWLP_USERDATA));
   }
 
   switch (message)
@@ -261,12 +286,10 @@ LRESULT CALLBACK WindowProc(HWND window,
     {
       return 0;
     }
-
     case WM_ACTIVATEAPP:
     {
       return 0;
     }
-
     case WM_CLOSE:
     {
       if (MessageBoxA(window, 
@@ -278,27 +301,24 @@ LRESULT CALLBACK WindowProc(HWND window,
       }
       return 0;
     }
-
     case WM_DESTROY:
     {
       appState->isRunning = false;
       PostQuitMessage(0);
       return 0;
     }
-
     case WM_PAINT:
     {
       // Paints on create and resize.
       PAINTSTRUCT painter;
       HDC deviceContext = BeginPaint(window, &painter);
 
-      win32::BlitBuffer(deviceContext, window, 
+      Win32::BlitBuffer(deviceContext, window, 
                 &(appState->buffer), &(appState->bitmapInfo));
 
       EndPaint(window, &painter);
       return 0;
     }
-
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
     case WM_KEYDOWN:

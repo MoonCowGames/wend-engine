@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: framebuffer.h                                                           |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #ifndef __WEND_FRAMEBUFFER_H__
 #define __WEND_FRAMEBUFFER_H__
 

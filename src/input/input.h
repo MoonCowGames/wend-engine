@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: input.h                                                                 |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #ifndef __WEND_INPUT_H__
 #define __WEND_INPUT_H__
 

@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: framebuffer.cpp                                                         |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #include <windows.h>
 #include <cstdint>
 
@@ -5,6 +13,13 @@
 
 namespace Render
 {
+  /**
+   * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
+   * 
+   * @param buffer The framebuffer struct containing the bitmap to be resized.
+   * @param width The new width of the window.
+   * @param height The new height of the window.
+   */
   void ResizeFramebuffer(Framebuffer* buffer, int width, int height)
   {
     if (buffer->bitmap)
@@ -20,7 +35,8 @@ namespace Render
     
     buffer->bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   }
-
+  
+  // NOTE: This will change or be removed. No docstring needed.
   void RenderGradient(Render::Framebuffer* buffer, int xOffset, int yOffset)
   {
     int pitch = buffer->width*4;
