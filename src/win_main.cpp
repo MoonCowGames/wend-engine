@@ -6,9 +6,27 @@
 +------------------------------------------------------------------------------+
 */
 
+/*
+  TODO: Windows-specific tasks remaining
+  - File I/O
+    - Saved game path
+    - Asset path
+  - Get a handle to our own exe file
+  - Threading support
+  - Mulitple keyboards support (Raw Input)
+  - CPU management on battery
+  - Multimonitor support
+  - Fullscreen support
+  - Control cursor visibility (WM_SETCURSOR)
+  - Focus/unfocus (WM_ACTIVATEAPP)
+  - Check blit speed
+  - Hardware acceleration
+  - International keyboard support (GetKeyboardLayout)
+  - Windows XP controller support
+ */
+
 #include <windows.h>
 #include <iostream>
-#include <iomanip>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdbool>
