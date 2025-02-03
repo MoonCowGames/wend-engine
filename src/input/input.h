@@ -9,10 +9,10 @@
 #ifndef __WEND_INPUT_H__
 #define __WEND_INPUT_H__
 
-#include <cstdint>
-#include <map>
 #include <windows.h>
 #include <xinput.h>
+
+#include "../misc/includes.h"
 
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 typedef XINPUT_GET_STATE(fn_XInputGetState);
@@ -159,7 +159,7 @@ namespace Input
 
   struct Keyboard
   {
-    uint8_t keyState[256];
+    uint8 keyState[256];
     
     // creates a hashmap pairing between virtual key and custom keycode. 
     // cross-platform function
@@ -229,14 +229,14 @@ namespace Input
     };
   };
 
-  bool CheckKeyIsPressed(uint8_t);
-  bool CheckKeyWasPressed(uint8_t);
-  bool CheckKeyIsHeld(uint8_t);
-  bool CheckKeyIsJustPressed(uint8_t);
-  bool CheckKeyIsReleased(uint8_t);
-  bool CheckKeyIsJustReleased(uint8_t);
+  bool CheckKeyIsPressed(uint8);
+  bool CheckKeyWasPressed(uint8);
+  bool CheckKeyIsHeld(uint8);
+  bool CheckKeyIsJustPressed(uint8);
+  bool CheckKeyIsReleased(uint8);
+  bool CheckKeyIsJustReleased(uint8);
 
-  void PoolKeyState(uint8_t*);
+  void PoolKeyState(uint8*);
 
   void InitXInput(fn_XInputGetState**, fn_XInputSetState**);
 }

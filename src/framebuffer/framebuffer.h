@@ -9,17 +9,19 @@
 #ifndef __WEND_FRAMEBUFFER_H__
 #define __WEND_FRAMEBUFFER_H__
 
+#include "../misc/includes.h"
+
 namespace Render
 {
   struct Framebuffer
   {
-    int width;
-    int height;
+    int16 width;
+    int16 height;
     void* bitmap;
   };
 
-  void ResizeFramebuffer(Framebuffer*, int, int);
-  void RenderGradient(Render::Framebuffer* buffer, int xOffset, int yOffset);
+  void ResizeFramebuffer(Framebuffer*, int16, int16);
+  void RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset);
 }
 
 #endif //__WEND_FRAMEBUFFER_H__

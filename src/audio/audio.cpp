@@ -100,8 +100,8 @@ namespace Audio
   void TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
                        Configuration* config)
   {
-    //int32_t halfPeriod = wavePeriod >> 1;
-    int32_t bytesPerSample = sizeof(int16_t)*2;
+    //int32 halfPeriod = wavePeriod >> 1;
+    int32 bytesPerSample = sizeof(int16)*2;
 
     DWORD playCursor;
     DWORD writeCursor;
@@ -138,9 +138,9 @@ namespace Audio
   }
 
   // NOTE: This will change or be removed. No docstring needed.
-  int16_t SineWave(float32 time, int32_t volume)
+  int16 SineWave(float32 time, int32 volume)
   {
-    return (int16_t)(sinf(time)*(float32)volume);
+    return (int16)(sinf(time)*(float32)volume);
   }
 
   /**
@@ -170,12 +170,12 @@ namespace Audio
       return;
     }
 
-    int16_t* sample = (int16_t *)region1;
+    int16* sample = (int16 *)region1;
     DWORD region1SampleCount = region1Size/config->bytesPerSample;
-    for (uint32_t index = 0; index < region1SampleCount; index++)
+    for (uint32 index = 0; index < region1SampleCount; index++)
     {
       float32 time = 2.0f * PI32 * ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-      int16_t sampleValue = sinf(time) * 4000;
+      int16 sampleValue = sinf(time) * 4000;
       // left
       *sample = sampleValue;
       sample++;
@@ -185,13 +185,13 @@ namespace Audio
       (config->runningSampleIndex)++;
     }
     
-    sample = (int16_t *)region2;
+    sample = (int16 *)region2;
     DWORD region2SampleCount = region2Size/config->bytesPerSample;
-    for (uint32_t index = 0; index < region2SampleCount; index++)
+    for (uint32 index = 0; index < region2SampleCount; index++)
     {
       float32 time = 2.0f * PI32 * 
           ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-      int16_t sampleValue = sinf(time) * 4000;
+      int16 sampleValue = sinf(time) * 4000;
       // left
       *sample = sampleValue;
       sample++;

@@ -26,16 +26,13 @@
  */
 
 #include <windows.h>
-#include <iostream>
-#include <cstdint>
-#include <cstdlib>
-#include <cstdbool>
 #include <xinput.h>
 
 #include "framebuffer/framebuffer.h"
 #include "application/application.h"
 #include "input/input.h"
 #include "audio/audio.h"
+#include "misc/includes.h"
 
 namespace Win32
 {
@@ -132,7 +129,7 @@ int WINAPI WinMain(HINSTANCE instance,
   audioCfg.frequency = 261;
   audioCfg.volume = 4000;
   audioCfg.wavePeriod = audioCfg.samplesPerSecond / audioCfg.frequency;
-  audioCfg.bytesPerSample = sizeof(int16_t)*2;
+  audioCfg.bytesPerSample = sizeof(int16)*2;
   audioCfg.bufferSize = audioCfg.samplesPerSecond * audioCfg.bytesPerSample;
   audioCfg.runningSampleIndex = 0;
 
@@ -199,16 +196,16 @@ int WINAPI WinMain(HINSTANCE instance,
           bool start = gamepad->wButtons & XINPUT_GAMEPAD_START;
           bool select = gamepad->wButtons & XINPUT_GAMEPAD_BACK;
 
-          int8_t triggerLeft = gamepad->bLeftTrigger;
-          int8_t triggerRight = gamepad->bRightTrigger;
+          int8 triggerLeft = gamepad->bLeftTrigger;
+          int8 triggerRight = gamepad->bRightTrigger;
 
-          int16_t xAxisLeft = gamepad->sThumbLX;
-          int16_t yAxisLeft = gamepad->sThumbLY;
+          int16 xAxisLeft = gamepad->sThumbLX;
+          int16 yAxisLeft = gamepad->sThumbLY;
           
-          int16_t xAxisRight = gamepad->sThumbRX;
-          int16_t yAxisRight = gamepad->sThumbRY;
+          int16 xAxisRight = gamepad->sThumbRX;
+          int16 yAxisRight = gamepad->sThumbRY;
 
-          int16_t deadzone = 2000;
+          int16 deadzone = 2000;
           if (abs(xAxisLeft) > deadzone)
           {          
             xOffset -= (xAxisLeft >> 12);
@@ -225,7 +222,7 @@ int WINAPI WinMain(HINSTANCE instance,
       }
     }
     
-    uint8_t* keyState = app->keyboard.keyState;
+    uint8* keyState = app->keyboard.keyState;
     Input::PoolKeyState(keyState);
 
     if (Input::CheckKeyIsPressed(keyState[Key::W]) ||
@@ -261,7 +258,7 @@ int WINAPI WinMain(HINSTANCE instance,
     ReleaseDC(window, deviceContext);
 
     QueryPerformanceCounter(&currentCounter);
-    int64_t counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
+    int64 counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
     deltaTime = (float32)counterElapsed / counterFrequency.QuadPart;
 
     lastCounter.QuadPart = currentCounter.QuadPart;
@@ -342,7 +339,7 @@ LRESULT CALLBACK WindowProc(HWND window,
     case WM_KEYDOWN:
     case WM_KEYUP:
     {
-      uint8_t* keyState =  appState->keyboard.keyState;
+      uint8* keyState =  appState->keyboard.keyState;
       const std::map<size_t, Key> map = appState->keyboard.keyMap;
 
       if (wParam == VK_ESCAPE)

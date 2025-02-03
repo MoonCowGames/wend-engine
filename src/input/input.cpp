@@ -12,42 +12,42 @@ namespace Input
 {
   ///@param state Input state bitfield.
   ///@return Returns true if key is pressed, else false.
-  bool CheckKeyIsPressed(uint8_t state)
+  bool CheckKeyIsPressed(uint8 state)
   {
     return (state & State::IS_PRESSED) != 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true if key was pressed, else false.
-  bool CheckKeyWasPressed(uint8_t state)
+  bool CheckKeyWasPressed(uint8 state)
   {
     return (state & State::WAS_PRESSED) != 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true only if key is pressed this frame but last frame it was not, else false.
-  bool CheckKeyIsJustPressed(uint8_t state)
+  bool CheckKeyIsJustPressed(uint8 state)
   {
     return CheckKeyIsPressed(state) && !CheckKeyWasPressed(state);
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true if key is released, else false.
-  bool CheckKeyIsReleased(uint8_t state)
+  bool CheckKeyIsReleased(uint8 state)
   {
     return (state & State::IS_PRESSED) == 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true if key was released, else false.
-  bool CheckKeyWasReleased(uint8_t state)
+  bool CheckKeyWasReleased(uint8 state)
   {
     return (state & State::WAS_PRESSED) == 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true only if key is released this frame but last frame it was not, else false.
-  bool CheckKeyIsJustReleased(uint8_t state)
+  bool CheckKeyIsJustReleased(uint8 state)
   {
     return CheckKeyIsReleased(state) && !CheckKeyWasReleased(state);
   }
@@ -58,7 +58,7 @@ namespace Input
    * 
    * @param keyState Array of input state bitfields.
    */
-  void PoolKeyState(uint8_t* keyState)
+  void PoolKeyState(uint8* keyState)
   {
     for (int keyIndex = 0; keyIndex < 256; keyIndex++)
     {

@@ -9,16 +9,11 @@
 #ifndef __WEND_APPLICATION_H__
 #define __WEND_APPLICATION_H__
 
-#include <map>
-#include <iostream>
-#include <iomanip>
 #include <windows.h>
 
 #include "../framebuffer/framebuffer.h"
 #include "../input/input.h"
-
-typedef float float32;
-typedef double float64;
+#include "../misc/includes.h"
 
 namespace App
 {
