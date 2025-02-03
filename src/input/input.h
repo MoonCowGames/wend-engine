@@ -8,17 +8,9 @@
 
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 typedef XINPUT_GET_STATE(fn_XInputGetState);
-/* XINPUT_GET_STATE(XInputGetStateStub)
-{
-  return 0;
-} */
 
 #define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
 typedef XINPUT_SET_STATE(fn_XInputSetState);
-/* XINPUT_SET_STATE(XInputSetStateStub)
-{
-  return 0;
-} */
 
 enum State
 {
@@ -160,6 +152,7 @@ namespace Input
   struct Keyboard
   {
     uint8_t keyState[256];
+    
     // creates a hashmap pairing between virtual key and custom keycode. 
     // cross-platform function
     static const inline std::map<size_t, Key> keyMap = {
