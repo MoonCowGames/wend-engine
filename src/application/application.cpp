@@ -28,8 +28,6 @@ namespace App
 
   void FrameUpdate(float32 deltaTime)
   {
-    int32_t fps = (int32_t)(1.0f/deltaTime);
-    std::cout << "frame delta: " << std::fixed << std::setprecision(3) << deltaTime << "s, fps: " << fps << std::endl;
     // TODO: Process per-frame changes.
   }
 
