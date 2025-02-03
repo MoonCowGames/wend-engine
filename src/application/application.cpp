@@ -6,6 +6,7 @@ namespace App
   {
     Application* app = (Application*)malloc(sizeof(Application));
     app->isRunning = true;
+
     app->bitmapInfo.bmiHeader.biSize = sizeof(app->bitmapInfo.bmiHeader);
     app->bitmapInfo.bmiHeader.biPlanes = 1;
     app->bitmapInfo.bmiHeader.biBitCount = 32;
@@ -23,6 +24,11 @@ namespace App
     }
 
     return app;
+  }
+
+  void FrameUpdate(float32 deltaTime)
+  {
+    // TODO: Process per-frame changes.
   }
 
   // Win32

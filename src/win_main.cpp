@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <iostream>
+#include <iomanip>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdbool>
@@ -115,10 +116,21 @@ int WINAPI WinMain(HINSTANCE instance,
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
+  LARGE_INTEGER counterFrequency;
+  QueryPerformanceFrequency(&counterFrequency);
+
+  LARGE_INTEGER currentCounter = {0};
+  LARGE_INTEGER lastCounter = {0};
+  QueryPerformanceCounter(&currentCounter);
+  lastCounter.QuadPart = currentCounter.QuadPart;
+
+  float32 deltaTime = 0.0f;
+
   int xOffset = 0;
   int yOffset = 0;
   while (app->isRunning)
   {
+
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
     {
@@ -203,6 +215,8 @@ int WINAPI WinMain(HINSTANCE instance,
       xOffset--;
     }
 
+    App::FrameUpdate(deltaTime);
+
     Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     Audio::TestAudioBuffer(soundBuffer, &audioCfg);
@@ -211,6 +225,12 @@ int WINAPI WinMain(HINSTANCE instance,
     win32::BlitBuffer(deviceContext, window, 
               &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
+
+    QueryPerformanceCounter(&currentCounter);
+    int64_t counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
+    deltaTime = (float32)counterElapsed / counterFrequency.QuadPart;
+
+    lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
   free(app);
