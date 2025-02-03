@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstdbool>
+#include <xinput.h>
 
 #include "framebuffer/framebuffer.h"
 #include "application/application.h"
@@ -103,6 +104,14 @@ int WINAPI WinMain(HINSTANCE instance,
   Audio::FillBuffer(soundBuffer, &audioCfg, 0, audioCfg.bufferSize);
   soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
+  fn_XInputGetState* XInputGetState = nullptr;
+  fn_XInputSetState* XInputSetState = nullptr;
+  Input::InitXInput(&XInputGetState, &XInputSetState);
+  if (!XInputGetState || !XInputSetState)
+  {
+    // TODO: Log xinput dll not found
+  }
+
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
@@ -115,6 +124,59 @@ int WINAPI WinMain(HINSTANCE instance,
     {
       TranslateMessage(&message);
       DispatchMessage(&message);
+    }
+
+    // Only attempt to read controller information if XInput is loaded
+    if (XInputGetState) 
+    {
+      for(int controllerIndex = 0; 
+          controllerIndex < XUSER_MAX_COUNT; 
+          controllerIndex++)
+      {
+        XINPUT_STATE controllerState;
+        if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
+        {
+          XINPUT_GAMEPAD* gamepad = &controllerState.Gamepad;
+
+          bool dpadUp = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+          bool dpadDown = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+          bool dpadLeft = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+          bool dpadRight = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+          bool faceBottom = gamepad->wButtons & XINPUT_GAMEPAD_A;
+          bool faceRight = gamepad->wButtons & XINPUT_GAMEPAD_B;
+          bool faceLeft = gamepad->wButtons & XINPUT_GAMEPAD_X;
+          bool faceTop = gamepad->wButtons & XINPUT_GAMEPAD_Y;
+          bool shoulderLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
+          bool shoulderRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
+          bool thumbstickLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
+          bool thumbstickRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
+          bool start = gamepad->wButtons & XINPUT_GAMEPAD_START;
+          bool select = gamepad->wButtons & XINPUT_GAMEPAD_BACK;
+
+          int8_t triggerLeft = gamepad->bLeftTrigger;
+          int8_t triggerRight = gamepad->bRightTrigger;
+
+          int16_t xAxisLeft = gamepad->sThumbLX;
+          int16_t yAxisLeft = gamepad->sThumbLY;
+          
+          int16_t xAxisRight = gamepad->sThumbRX;
+          int16_t yAxisRight = gamepad->sThumbRY;
+
+          int16_t deadzone = 2000;
+          if (abs(xAxisLeft) > deadzone)
+          {          
+            xOffset -= (xAxisLeft >> 12);
+          }
+          if (abs(yAxisLeft) > deadzone)
+          {          
+            yOffset += (yAxisLeft >> 12);
+          }
+        }
+        else
+        {
+          continue;
+        }
+      }
     }
     
     uint8_t* keyState = app->keyboard.keyState;
@@ -187,7 +249,10 @@ LRESULT CALLBACK WindowProc(HWND window,
 
     case WM_CLOSE:
     {
-      if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
+      if (MessageBoxA(window, 
+                      "Are you sure you want to quit? Unsaved progress will be lost.", 
+                      "Wend", 
+                      MB_OKCANCEL) == IDOK)
       {
         DestroyWindow(window);
       }
@@ -224,7 +289,10 @@ LRESULT CALLBACK WindowProc(HWND window,
 
       if (wParam == VK_ESCAPE)
       {
-        if (MessageBoxA(window, "Are you sure you want to quit? Unsaved progress will be lost.", "Wend", MB_OKCANCEL) == IDOK)
+        if (MessageBoxA(window, 
+                        "Are you sure you want to quit? Unsaved progress will be lost.", 
+                        "Wend", 
+                        MB_OKCANCEL) == IDOK)
         {
           DestroyWindow(window);
         }

@@ -41,4 +41,26 @@ namespace Input
       }
     }
   }
+  
+  void InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
+  {
+    // Get library
+    HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
+    if (!xInputLibrary)
+    {
+      return;
+    }
+
+    // Link function call to library
+    *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
+    if (!XInputGetState)
+    {
+      return;
+    }
+    *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
+    if (!XInputSetState)
+    {
+      return;
+    }
+  }
 }
