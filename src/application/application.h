@@ -2,10 +2,15 @@
 #define __WEND_APPLICATION_H__
 
 #include <map>
+#include <iostream>
+#include <iomanip>
 #include <windows.h>
 
 #include "../framebuffer/framebuffer.h"
 #include "../input/input.h"
+
+typedef float float32;
+typedef double float64;
 
 namespace App
 {
@@ -22,7 +27,7 @@ namespace App
   };
 
   Application* InitApplication(int, int);
+  void FrameUpdate(float32 deltaTime);
 }
-
 
 #endif //__WEND_APPLICATION_H__

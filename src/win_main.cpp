@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <iostream>
+#include <iomanip>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdbool>
@@ -118,10 +119,12 @@ int WINAPI WinMain(HINSTANCE instance,
   LARGE_INTEGER counterFrequency;
   QueryPerformanceFrequency(&counterFrequency);
 
-  LARGE_INTEGER currentCounter;
-  LARGE_INTEGER lastCounter;
+  LARGE_INTEGER currentCounter = {0};
+  LARGE_INTEGER lastCounter = {0};
   QueryPerformanceCounter(&currentCounter);
   lastCounter.QuadPart = currentCounter.QuadPart;
+
+  float32 deltaTime = 0.0f;
 
   int xOffset = 0;
   int yOffset = 0;
@@ -212,6 +215,8 @@ int WINAPI WinMain(HINSTANCE instance,
       xOffset--;
     }
 
+    App::FrameUpdate(deltaTime);
+
     Render::RenderGradient(&(app->buffer), xOffset, yOffset);
     
     Audio::TestAudioBuffer(soundBuffer, &audioCfg);
@@ -223,11 +228,9 @@ int WINAPI WinMain(HINSTANCE instance,
 
     QueryPerformanceCounter(&currentCounter);
     int64_t counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
-    int32_t deltaMilliseconds = (1000 * counterElapsed) / counterFrequency.QuadPart;
-    lastCounter.QuadPart = currentCounter.QuadPart;
-    int32_t fps = 1000/deltaMilliseconds;
+    deltaTime = (float32)counterElapsed / counterFrequency.QuadPart;
 
-    std::cout << "frame delta: " << deltaMilliseconds << "ms, FPS: " << fps << '\n';
+    lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
   free(app);

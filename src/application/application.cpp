@@ -6,6 +6,7 @@ namespace App
   {
     Application* app = (Application*)malloc(sizeof(Application));
     app->isRunning = true;
+
     app->bitmapInfo.bmiHeader.biSize = sizeof(app->bitmapInfo.bmiHeader);
     app->bitmapInfo.bmiHeader.biPlanes = 1;
     app->bitmapInfo.bmiHeader.biBitCount = 32;
@@ -23,6 +24,13 @@ namespace App
     }
 
     return app;
+  }
+
+  void FrameUpdate(float32 deltaTime)
+  {
+    int32_t fps = (int32_t)(1.0f/deltaTime);
+    std::cout << "frame delta: " << std::fixed << std::setprecision(3) << deltaTime << "s, fps: " << fps << std::endl;
+    // TODO: Process per-frame changes.
   }
 
   // Win32
