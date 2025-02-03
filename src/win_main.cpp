@@ -115,10 +115,19 @@ int WINAPI WinMain(HINSTANCE instance,
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
 
+  LARGE_INTEGER counterFrequency;
+  QueryPerformanceFrequency(&counterFrequency);
+
+  LARGE_INTEGER currentCounter;
+  LARGE_INTEGER lastCounter;
+  QueryPerformanceCounter(&currentCounter);
+  lastCounter.QuadPart = currentCounter.QuadPart;
+
   int xOffset = 0;
   int yOffset = 0;
   while (app->isRunning)
   {
+
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
     {
@@ -211,6 +220,14 @@ int WINAPI WinMain(HINSTANCE instance,
     win32::BlitBuffer(deviceContext, window, 
               &(app->buffer), &(app->bitmapInfo));
     ReleaseDC(window, deviceContext);
+
+    QueryPerformanceCounter(&currentCounter);
+    int64_t counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
+    int32_t deltaMilliseconds = (1000 * counterElapsed) / counterFrequency.QuadPart;
+    lastCounter.QuadPart = currentCounter.QuadPart;
+    int32_t fps = 1000/deltaMilliseconds;
+
+    std::cout << "frame delta: " << deltaMilliseconds << "ms, FPS: " << fps << '\n';
   }
 
   free(app);
