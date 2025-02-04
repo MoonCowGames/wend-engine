@@ -229,12 +229,12 @@ namespace Input
     };
   };
 
-  bool CheckKeyIsPressed(uint8);
-  bool CheckKeyWasPressed(uint8);
-  bool CheckKeyIsHeld(uint8);
-  bool CheckKeyIsJustPressed(uint8);
-  bool CheckKeyIsReleased(uint8);
-  bool CheckKeyIsJustReleased(uint8);
+  bool IsPressed(uint8);
+  bool WasPressed(uint8);
+  bool IsHeld(uint8);
+  bool IsJustPressed(uint8);
+  bool IsReleased(uint8);
+  bool IsJustReleased(uint8);
 
   void PoolKeyState(uint8*);
 

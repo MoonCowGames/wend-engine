@@ -12,28 +12,28 @@ namespace Input
 {
   ///@param state Input state bitfield.
   ///@return Returns true if key is pressed, else false.
-  bool CheckKeyIsPressed(uint8 state)
+  bool IsPressed(uint8 state)
   {
     return (state & State::IS_PRESSED) != 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true if key was pressed, else false.
-  bool CheckKeyWasPressed(uint8 state)
+  bool WasPressed(uint8 state)
   {
     return (state & State::WAS_PRESSED) != 0;
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true only if key is pressed this frame but last frame it was not, else false.
-  bool CheckKeyIsJustPressed(uint8 state)
+  bool IsJustPressed(uint8 state)
   {
-    return CheckKeyIsPressed(state) && !CheckKeyWasPressed(state);
+    return IsPressed(state) && !WasPressed(state);
   }
 
   ///@param state Input state bitfield.
   ///@return Returns true if key is released, else false.
-  bool CheckKeyIsReleased(uint8 state)
+  bool IsReleased(uint8 state)
   {
     return (state & State::IS_PRESSED) == 0;
   }
@@ -47,11 +47,13 @@ namespace Input
 
   ///@param state Input state bitfield.
   ///@return Returns true only if key is released this frame but last frame it was not, else false.
-  bool CheckKeyIsJustReleased(uint8 state)
+  bool IsJustReleased(uint8 state)
   {
-    return CheckKeyIsReleased(state) && !CheckKeyWasReleased(state);
+    return IsReleased(state) && !CheckKeyWasReleased(state);
   }
 
+  // In hindsight, why am i running this every frame? 
+  // Can't I just run this per key when their state changes?
   /**
    * Loops through all indexes in the keyState array and updates the WAS_PRESSED
    * state of the key to reflect any changes.
@@ -62,11 +64,11 @@ namespace Input
   {
     for (int keyIndex = 0; keyIndex < 256; keyIndex++)
     {
-      if (Input::CheckKeyIsJustPressed(keyState[(Key)keyIndex]))
+      if (Input::IsJustPressed(keyState[(Key)keyIndex]))
       {
         keyState[(Key)keyIndex] |= State::WAS_PRESSED;
       }
-      else if (Input::CheckKeyIsJustReleased(keyState[(Key)keyIndex]))
+      else if (Input::IsJustReleased(keyState[(Key)keyIndex]))
       {
         keyState[(Key)keyIndex] &= ~(State::WAS_PRESSED);
       }
