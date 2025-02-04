@@ -13,6 +13,7 @@
 
 namespace Render
 {
+  // Needed only when not stretching.
   /**
    * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
    * 
@@ -24,6 +25,7 @@ namespace Render
   {
     if (buffer->bitmap)
     {
+      // Windows-specific.
       VirtualFree(buffer->bitmap, 0, MEM_RELEASE);
     }
 
@@ -33,6 +35,7 @@ namespace Render
     const int8 bytesPerPixel = 4;
     int32 bitmapSize = (width * height) * bytesPerPixel;
     
+    // Windows-specific.
     buffer->bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   }
   

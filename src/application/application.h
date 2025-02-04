@@ -23,13 +23,12 @@ namespace App
 
     // Rendering
     Render::Framebuffer buffer;
-    BITMAPINFO bitmapInfo;
 
     // State
     bool isRunning;
   };
 
-  Application* InitApplication(int, int);
+  void InitApplication(Application*, int, int);
   void FrameUpdate(float32 deltaTime);
 }
 

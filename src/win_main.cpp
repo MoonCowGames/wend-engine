@@ -36,6 +36,11 @@
 
 namespace Win32
 {
+  struct AppState
+  {
+    App::Application app;
+    BITMAPINFO bitmapInfo;
+  };
   void BlitBuffer(HDC deviceContext, 
                   HWND window,
                   Render::Framebuffer* buffer, 
@@ -85,7 +90,14 @@ int WINAPI WinMain(HINSTANCE instance,
   int width = 1280;
   int height = 720;
 
-  App::Application* app = App::InitApplication(width, height);
+  Win32::AppState appState = {};
+  App::InitApplication(&(appState.app), width, height);
+  appState.bitmapInfo.bmiHeader.biSize = sizeof(appState.bitmapInfo.bmiHeader);
+  appState.bitmapInfo.bmiHeader.biPlanes = 1;
+  appState.bitmapInfo.bmiHeader.biBitCount = 32;
+  appState.bitmapInfo.bmiHeader.biCompression = BI_RGB;
+  appState.bitmapInfo.bmiHeader.biWidth = width;
+  appState.bitmapInfo.bmiHeader.biHeight = -height;
   
   // Register window class.
   const char CLASS_NAME[] = "Wend Class";
@@ -115,7 +127,7 @@ int WINAPI WinMain(HINSTANCE instance,
       NULL,
       NULL,
       instance,
-      app
+      &appState
   );
 
   if (window == NULL)
@@ -125,7 +137,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
   IDirectSoundBuffer* soundBuffer = {}; 
   Audio::Configuration audioCfg = {};
-  audioCfg.samplesPerSecond = 44100;
+  audioCfg.samplesPerSecond = 48000;
   audioCfg.frequency = 261;
   audioCfg.volume = 4000;
   audioCfg.wavePeriod = audioCfg.samplesPerSecond / audioCfg.frequency;
@@ -160,7 +172,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
   int xOffset = 0;
   int yOffset = 0;
-  while (app->isRunning)
+  while (appState.app.isRunning)
   {
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
@@ -222,39 +234,39 @@ int WINAPI WinMain(HINSTANCE instance,
       }
     }
     
-    uint8* keyState = app->keyboard.keyState;
+    uint8* keyState = appState.app.keyboard.keyState;
     Input::PoolKeyState(keyState);
 
-    if (Input::CheckKeyIsPressed(keyState[Key::W]) ||
-        Input::CheckKeyIsPressed(keyState[Key::UP]))
+    if (Input::IsPressed(keyState[Key::W]) ||
+        Input::IsPressed(keyState[Key::UP]))
     {
       yOffset++;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::S]) ||
-        Input::CheckKeyIsPressed(keyState[Key::DOWN]))
+    if (Input::IsPressed(keyState[Key::S]) ||
+        Input::IsPressed(keyState[Key::DOWN]))
     {
       yOffset--;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::A]) ||
-        Input::CheckKeyIsPressed(keyState[Key::LEFT]))
+    if (Input::IsPressed(keyState[Key::A]) ||
+        Input::IsPressed(keyState[Key::LEFT]))
     {
       xOffset++;
     }
-    if (Input::CheckKeyIsPressed(keyState[Key::D]) ||
-        Input::CheckKeyIsPressed(keyState[Key::RIGHT]))
+    if (Input::IsPressed(keyState[Key::D]) ||
+        Input::IsPressed(keyState[Key::RIGHT]))
     {
       xOffset--;
     }
 
     App::FrameUpdate(deltaTime);
 
-    Render::RenderGradient(&(app->buffer), xOffset, yOffset);
+    Render::RenderGradient(&(appState.app.buffer), xOffset, yOffset);
     
     Audio::TestAudioBuffer(soundBuffer, &audioCfg);
 
     HDC deviceContext = GetDC(window);
     Win32::BlitBuffer(deviceContext, window, 
-              &(app->buffer), &(app->bitmapInfo));
+              &(appState.app.buffer), &(appState.bitmapInfo));
     ReleaseDC(window, deviceContext);
 
     QueryPerformanceCounter(&currentCounter);
@@ -264,8 +276,6 @@ int WINAPI WinMain(HINSTANCE instance,
     lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
-  free(app);
-  app = NULL;
   return 0;
 }
 
@@ -283,16 +293,16 @@ LRESULT CALLBACK WindowProc(HWND window,
                             WPARAM wParam, 
                             LPARAM lParam)
 {
-  App::Application* appState = NULL;
+  Win32::AppState* appState = NULL;
   if (message == WM_CREATE)
   {
     CREATESTRUCT* create = (CREATESTRUCT*)lParam;
-    appState = (App::Application*)(create->lpCreateParams);
+    appState = (Win32::AppState*)(create->lpCreateParams);
     SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)appState);
   }
   else
   {
-    appState = (App::Application*)(GetWindowLongPtr(window,GWLP_USERDATA));
+    appState = (Win32::AppState*)(GetWindowLongPtr(window,GWLP_USERDATA));
   }
 
   switch (message)
@@ -318,7 +328,7 @@ LRESULT CALLBACK WindowProc(HWND window,
     }
     case WM_DESTROY:
     {
-      appState->isRunning = false;
+      appState->app.isRunning = false;
       PostQuitMessage(0);
       return 0;
     }
@@ -329,7 +339,7 @@ LRESULT CALLBACK WindowProc(HWND window,
       HDC deviceContext = BeginPaint(window, &painter);
 
       Win32::BlitBuffer(deviceContext, window, 
-                &(appState->buffer), &(appState->bitmapInfo));
+                        &(appState->app.buffer), &(appState->bitmapInfo));
 
       EndPaint(window, &painter);
       return 0;
@@ -339,8 +349,8 @@ LRESULT CALLBACK WindowProc(HWND window,
     case WM_KEYDOWN:
     case WM_KEYUP:
     {
-      uint8* keyState =  appState->keyboard.keyState;
-      const std::map<size_t, Key> map = appState->keyboard.keyMap;
+      uint8* keyState =  appState->app.keyboard.keyState;
+      const std::map<size_t, Key> map = appState->app.keyboard.keyMap;
 
       if (wParam == VK_ESCAPE)
       {
