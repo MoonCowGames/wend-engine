@@ -14,11 +14,7 @@
 
 #include "../misc/includes.h"
 
-#define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
-typedef XINPUT_GET_STATE(fn_XInputGetState);
 
-#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
-typedef XINPUT_SET_STATE(fn_XInputSetState);
 
 enum State
 {
@@ -238,7 +234,6 @@ namespace Input
 
   void PoolKeyState(uint8*);
 
-  void InitXInput(fn_XInputGetState**, fn_XInputSetState**);
 }
 
 #endif //__WEND_INPUT_H__

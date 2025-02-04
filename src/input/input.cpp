@@ -75,35 +75,4 @@ namespace Input
     }
   }
   
-  /**
-   * Prepares Windows' XInput library and prepares function pointers 
-   * to XInput API. Allows for dynamic function loading in case end-user does
-   * not have the required XInput dll installed.
-   * 
-   * @param XInputGetState Function pointer to load XInput function into.
-   * Used to get the current state of a controller.
-   * @param XInputSetState Function pointer to load XInput function into.
-   * Used to set state of a controller for vibration.
-   */
-  void InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
-  {
-    // Get library
-    HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
-    if (!xInputLibrary)
-    {
-      return;
-    }
-
-    // Link function call to library
-    *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
-    if (!XInputGetState)
-    {
-      return;
-    }
-    *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
-    if (!XInputSetState)
-    {
-      return;
-    }
-  }
 }
