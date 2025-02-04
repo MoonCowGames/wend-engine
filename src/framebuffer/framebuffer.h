@@ -19,8 +19,7 @@ namespace Render
     int16 height;
     void* bitmap;
   };
-
-  void ResizeFramebuffer(Framebuffer*, int16, int16);
+  
   void RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset);
 }
 

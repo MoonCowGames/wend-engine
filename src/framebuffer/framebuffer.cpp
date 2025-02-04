@@ -12,33 +12,7 @@
 #include "framebuffer.h"
 
 namespace Render
-{
-  // Needed only when not stretching.
-  /**
-   * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
-   * 
-   * @param buffer The framebuffer struct containing the bitmap to be resized.
-   * @param width The new width of the window.
-   * @param height The new height of the window.
-   */
-  void ResizeFramebuffer(Framebuffer* buffer, int16 width, int16 height)
-  {
-    if (buffer->bitmap)
-    {
-      // Windows-specific.
-      VirtualFree(buffer->bitmap, 0, MEM_RELEASE);
-    }
-
-    buffer->width = width;
-    buffer->height = height;
-
-    const int8 bytesPerPixel = 4;
-    int32 bitmapSize = (width * height) * bytesPerPixel;
-    
-    // Windows-specific.
-    buffer->bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
-  }
-  
+{  
   // NOTE: This will change or be removed. No docstring needed.
   void RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset)
   {

@@ -25,27 +25,10 @@
   - Windows XP controller support
  */
 
-#include <windows.h>
-#include <xinput.h>
-
-#include "framebuffer/framebuffer.h"
-#include "application/application.h"
-#include "input/input.h"
-#include "audio/audio.h"
-#include "misc/includes.h"
+#include "win_main.h"
 
 namespace Win32
 {
-  struct AppState
-  {
-    App::Application app;
-    BITMAPINFO bitmapInfo;
-  };
-  void BlitBuffer(HDC deviceContext, 
-                  HWND window,
-                  Render::Framebuffer* buffer, 
-                  BITMAPINFO* bitmapInfo);
-
   /**
    * Displays the framebuffer on the window.
    * 
@@ -54,18 +37,41 @@ namespace Win32
    * @param buffer The framebuffer to be displayed.
    * @param bitmapInfo Information Windows requires to display the framebuffer.
    */
-  void BlitBuffer(HDC deviceContext, 
-                  HWND window,
-                  Render::Framebuffer* buffer, 
-                  BITMAPINFO* bitmapInfo)
+  void BlitBuffer(HDC deviceContext, HWND window, AppState* appState)
   {
     RECT clientRect = {};
     GetClientRect(window, &clientRect);
     StretchDIBits(deviceContext,
                   0, 0, clientRect.right, clientRect.bottom,
-                  0, 0, buffer->width, buffer->height,
-                  buffer->bitmap, bitmapInfo,
+                  0, 0, appState->app.buffer.width, appState->app.buffer.height,
+                  appState->app.buffer.bitmap, 
+                  &(appState->bitmapInfo),
                   DIB_RGB_COLORS, SRCCOPY);
+  }
+
+  /**
+   * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
+   * 
+   * @param appState Struct containing framebuffer and BITMAPINFO
+   * @param width The new width of the window.
+   * @param height The new height of the window.
+   */
+  void OnResize(AppState* appState, int16 width, int16 height)
+  {
+    if (appState->app.buffer.bitmap)
+    {
+      VirtualFree(appState->app.buffer.bitmap, 0, MEM_RELEASE);
+    }
+
+    appState->app.buffer.width = width;
+    appState->app.buffer.height = height;
+    appState->bitmapInfo.bmiHeader.biWidth = width;
+    appState->bitmapInfo.bmiHeader.biHeight = -height;
+
+    const int8 bytesPerPixel = 4;
+    int32 bitmapSize = (width * height) * bytesPerPixel;
+    
+    appState->app.buffer.bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
   }
 }
 
@@ -90,14 +96,14 @@ int WINAPI WinMain(HINSTANCE instance,
   int width = 1280;
   int height = 720;
 
-  Win32::AppState appState = {};
-  App::InitApplication(&(appState.app), width, height);
-  appState.bitmapInfo.bmiHeader.biSize = sizeof(appState.bitmapInfo.bmiHeader);
-  appState.bitmapInfo.bmiHeader.biPlanes = 1;
-  appState.bitmapInfo.bmiHeader.biBitCount = 32;
-  appState.bitmapInfo.bmiHeader.biCompression = BI_RGB;
-  appState.bitmapInfo.bmiHeader.biWidth = width;
-  appState.bitmapInfo.bmiHeader.biHeight = -height;
+  Win32::AppState* appState = (Win32::AppState*)malloc(sizeof(Win32::AppState));
+  App::InitApplication(&(appState->app));
+  appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
+  appState->bitmapInfo.bmiHeader.biPlanes = 1;
+  appState->bitmapInfo.bmiHeader.biBitCount = 32;
+  appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
+  
+  OnResize(appState, width, height);
   
   // Register window class.
   const char CLASS_NAME[] = "Wend Class";
@@ -127,7 +133,7 @@ int WINAPI WinMain(HINSTANCE instance,
       NULL,
       NULL,
       instance,
-      &appState
+      appState
   );
 
   if (window == NULL)
@@ -172,7 +178,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
   int xOffset = 0;
   int yOffset = 0;
-  while (appState.app.isRunning)
+  while (appState->app.isRunning)
   {
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
@@ -234,7 +240,7 @@ int WINAPI WinMain(HINSTANCE instance,
       }
     }
     
-    uint8* keyState = appState.app.keyboard.keyState;
+    uint8* keyState = appState->app.keyboard.keyState;
     Input::PoolKeyState(keyState);
 
     if (Input::IsPressed(keyState[Key::W]) ||
@@ -260,13 +266,12 @@ int WINAPI WinMain(HINSTANCE instance,
 
     App::FrameUpdate(deltaTime);
 
-    Render::RenderGradient(&(appState.app.buffer), xOffset, yOffset);
+    Render::RenderGradient(&(appState->app.buffer), xOffset, yOffset);
     
     Audio::TestAudioBuffer(soundBuffer, &audioCfg);
 
     HDC deviceContext = GetDC(window);
-    Win32::BlitBuffer(deviceContext, window, 
-              &(appState.app.buffer), &(appState.bitmapInfo));
+    Win32::BlitBuffer(deviceContext, window, appState);
     ReleaseDC(window, deviceContext);
 
     QueryPerformanceCounter(&currentCounter);
@@ -276,6 +281,8 @@ int WINAPI WinMain(HINSTANCE instance,
     lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
+  free(appState);
+  appState = NULL;
   return 0;
 }
 
@@ -338,8 +345,7 @@ LRESULT CALLBACK WindowProc(HWND window,
       PAINTSTRUCT painter;
       HDC deviceContext = BeginPaint(window, &painter);
 
-      Win32::BlitBuffer(deviceContext, window, 
-                        &(appState->app.buffer), &(appState->bitmapInfo));
+      Win32::BlitBuffer(deviceContext, window, appState);
 
       EndPaint(window, &painter);
       return 0;

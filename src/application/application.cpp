@@ -17,14 +17,9 @@ namespace App
    * @param height Height of window in pixels.
    * @return Returns pointer to the application being initialised.
    */
-  void InitApplication(Application* app, int width, int height)
+  void InitApplication(Application* app)
   {
     app->isRunning = true;
-
-    app->buffer.width = width;
-    app->buffer.height = height;
-    
-    Render::ResizeFramebuffer(&(app->buffer), width, height); // Windows specific
     
     for (int index = 0; index < 256; index++)
     {

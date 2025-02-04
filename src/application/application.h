@@ -19,6 +19,7 @@ namespace App
 {
   struct Application
   {
+    // Input
     Input::Keyboard keyboard;
 
     // Rendering
@@ -28,7 +29,7 @@ namespace App
     bool isRunning;
   };
 
-  void InitApplication(Application*, int, int);
+  void InitApplication(Application*);
   void FrameUpdate(float32 deltaTime);
 }
 
