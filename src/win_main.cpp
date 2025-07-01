@@ -127,8 +127,6 @@ int WINAPI WinMain(HINSTANCE instance,
 
   float32 deltaTime = 0.0f;
 
-  int xOffset = 0;
-  int yOffset = 0;
   while (appState->app.isRunning)
   {
     MSG message = {};
@@ -138,83 +136,61 @@ int WINAPI WinMain(HINSTANCE instance,
       DispatchMessage(&message);
     }
 
+    // TODO: Platform independant gamepad and send to app
     // Only attempt to read controller information if XInput is loaded
-    if (XInputGetState) 
-    {
-      for(int controllerIndex = 0; 
-          controllerIndex < XUSER_MAX_COUNT; 
-          controllerIndex++)
-      {
-        XINPUT_STATE controllerState;
-        if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
-        {
-          XINPUT_GAMEPAD* gamepad = &controllerState.Gamepad;
+    // if (XInputGetState) 
+    // {
+    //   for(int controllerIndex = 0; 
+    //       controllerIndex < XUSER_MAX_COUNT; 
+    //       controllerIndex++)
+    //   {
+    //     XINPUT_STATE controllerState;
+    //     if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
+    //     {
+    //       XINPUT_GAMEPAD* gamepad = &controllerState.Gamepad;
 
-          bool dpadUp = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
-          bool dpadDown = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-          bool dpadLeft = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-          bool dpadRight = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
-          bool faceBottom = gamepad->wButtons & XINPUT_GAMEPAD_A;
-          bool faceRight = gamepad->wButtons & XINPUT_GAMEPAD_B;
-          bool faceLeft = gamepad->wButtons & XINPUT_GAMEPAD_X;
-          bool faceTop = gamepad->wButtons & XINPUT_GAMEPAD_Y;
-          bool shoulderLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
-          bool shoulderRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
-          bool thumbstickLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
-          bool thumbstickRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
-          bool start = gamepad->wButtons & XINPUT_GAMEPAD_START;
-          bool select = gamepad->wButtons & XINPUT_GAMEPAD_BACK;
+    //       bool dpadUp = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+    //       bool dpadDown = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+    //       bool dpadLeft = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+    //       bool dpadRight = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+    //       bool faceBottom = gamepad->wButtons & XINPUT_GAMEPAD_A;
+    //       bool faceRight = gamepad->wButtons & XINPUT_GAMEPAD_B;
+    //       bool faceLeft = gamepad->wButtons & XINPUT_GAMEPAD_X;
+    //       bool faceTop = gamepad->wButtons & XINPUT_GAMEPAD_Y;
+    //       bool shoulderLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
+    //       bool shoulderRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
+    //       bool thumbstickLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
+    //       bool thumbstickRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
+    //       bool start = gamepad->wButtons & XINPUT_GAMEPAD_START;
+    //       bool select = gamepad->wButtons & XINPUT_GAMEPAD_BACK;
 
-          int8 triggerLeft = gamepad->bLeftTrigger;
-          int8 triggerRight = gamepad->bRightTrigger;
+    //       int8 triggerLeft = gamepad->bLeftTrigger;
+    //       int8 triggerRight = gamepad->bRightTrigger;
 
-          int16 xAxisLeft = gamepad->sThumbLX;
-          int16 yAxisLeft = gamepad->sThumbLY;
+    //       int16 xAxisLeft = gamepad->sThumbLX;
+    //       int16 yAxisLeft = gamepad->sThumbLY;
           
-          int16 xAxisRight = gamepad->sThumbRX;
-          int16 yAxisRight = gamepad->sThumbRY;
+    //       int16 xAxisRight = gamepad->sThumbRX;
+    //       int16 yAxisRight = gamepad->sThumbRY;
 
-          int16 deadzone = 2000;
-          if (abs(xAxisLeft) > deadzone)
-          {          
-            xOffset -= (xAxisLeft >> 12);
-          }
-          if (abs(yAxisLeft) > deadzone)
-          {          
-            yOffset += (yAxisLeft >> 12);
-          }
-        }
-        else
-        {
-          continue;
-        }
-      }
-    }
-    
-    uint8* keyState = appState->app.keyboard.keyState;
-    Input::PoolKeyState(keyState);
+    //       int16 deadzone = 2000;
+    //       if (abs(xAxisLeft) > deadzone)
+    //       {          
+    //         xOffset -= (xAxisLeft >> 12);
+    //       }
+    //       if (abs(yAxisLeft) > deadzone)
+    //       {          
+    //         yOffset += (yAxisLeft >> 12);
+    //       }
+    //     }
+    //     else
+    //     {
+    //       continue;
+    //     }
+    //   }
+    // }
 
-    if (Input::IsPressed(keyState[Key::W]) ||
-        Input::IsPressed(keyState[Key::UP]))
-    {
-      yOffset++;
-    }
-    if (Input::IsPressed(keyState[Key::S]) ||
-        Input::IsPressed(keyState[Key::DOWN]))
-    {
-      yOffset--;
-    }
-    if (Input::IsPressed(keyState[Key::A]) ||
-        Input::IsPressed(keyState[Key::LEFT]))
-    {
-      xOffset++;
-    }
-    if (Input::IsPressed(keyState[Key::D]) ||
-        Input::IsPressed(keyState[Key::RIGHT]))
-    {
-      xOffset--;
-    }
-
+    // TODO: Move to function
     DWORD playCursor = 0;
     DWORD writeCursor = 0;
 
@@ -245,12 +221,11 @@ int WINAPI WinMain(HINSTANCE instance,
       // ||--------------[LC]============[PC]----------------||
       bytesToWrite = playCursor - lockCursor;
     }
+    // End todo
 
     appState->app.soundBuffer.sampleCount = bytesToWrite / appState->app.soundCfg.bytesPerSample;
 
     App::FrameUpdate(&(appState->app), deltaTime);
-
-    Render::RenderGradient(&(appState->app.frameBuffer), xOffset, yOffset);
     
     Win32::FillDirectSoundBuffer(directSoundBuffer, &(appState->app.soundBuffer), &(appState->app.soundCfg), lockCursor, bytesToWrite);
 
