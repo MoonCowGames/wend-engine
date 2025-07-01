@@ -11,7 +11,6 @@
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID guiDevice, LPDIRECTSOUND* directSound, LPUNKNOWN outer);
 typedef DIRECT_SOUND_CREATE(fn_DirectSoundCreate);
 
-
 void Audio::InitDirectSound(IDirectSoundBuffer** soundBuffer, 
                       HWND window, 
                       Audio::Configuration config)
@@ -93,6 +92,58 @@ void Audio::InitDirectSound(IDirectSoundBuffer** soundBuffer,
   }
 }
 
+void Audio::FillBuffer(IDirectSoundBuffer* soundBuffer, 
+  Audio::Configuration* config, 
+                DWORD lockCursor, 
+                DWORD bytesToWrite)
+                {
+                  void* region1;
+                  DWORD region1Size;
+                  void* region2;
+                  DWORD region2Size;
+                  
+                  if (soundBuffer->Lock(lockCursor, bytesToWrite,
+                        &region1, &region1Size,
+                        &region2, &region2Size, 0) < 0)
+  {
+    // TODO: Log error
+    return;
+  }
+  
+  int16* sample = (int16 *)region1;
+  DWORD region1SampleCount = region1Size/config->bytesPerSample;
+  for (uint32 index = 0; index < region1SampleCount; index++)
+  {
+    float32 time = 2.0f * PI32 * ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
+    int16 sampleValue = sinf(time) * 4000;
+    // left
+    *sample = sampleValue;
+    sample++;
+    // right
+    *sample = sampleValue;
+    sample++;
+    (config->runningSampleIndex)++;
+  }
+  
+  sample = (int16 *)region2;
+  DWORD region2SampleCount = region2Size/config->bytesPerSample;
+  for (uint32 index = 0; index < region2SampleCount; index++)
+  {
+    float32 time = 2.0f * PI32 * 
+    ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
+    int16 sampleValue = sinf(time) * 4000;
+    // left
+    *sample = sampleValue;
+    sample++;
+    // right
+    *sample = sampleValue;
+    sample++;
+    (config->runningSampleIndex)++;
+  }
+  
+  soundBuffer->Unlock(region1, region1Size, region2, region2Size);
+}
+
 void Audio::TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
                       Audio::Configuration* config)
 {
@@ -131,63 +182,9 @@ void Audio::TestAudioBuffer(IDirectSoundBuffer* soundBuffer,
   }
 
   Audio::FillBuffer(soundBuffer, config, lockCursor, bytesToWrite);
-  
 }
 
 int16 SineWave(float32 time, int32 volume)
 {
   return (int16)(sinf(time)*(float32)volume);
-}
-
-
-void Audio::FillBuffer(IDirectSoundBuffer* soundBuffer, 
-                Audio::Configuration* config, 
-                DWORD lockCursor, 
-                DWORD bytesToWrite)
-{
-  void* region1;
-  DWORD region1Size;
-  void* region2;
-  DWORD region2Size;
-
-  if (soundBuffer->Lock(lockCursor, bytesToWrite,
-                        &region1, &region1Size,
-                        &region2, &region2Size, 0) < 0)
-  {
-    // TODO: Log error
-    return;
-  }
-
-  int16* sample = (int16 *)region1;
-  DWORD region1SampleCount = region1Size/config->bytesPerSample;
-  for (uint32 index = 0; index < region1SampleCount; index++)
-  {
-    float32 time = 2.0f * PI32 * ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-    int16 sampleValue = sinf(time) * 4000;
-    // left
-    *sample = sampleValue;
-    sample++;
-    // right
-    *sample = sampleValue;
-    sample++;
-    (config->runningSampleIndex)++;
-  }
-  
-  sample = (int16 *)region2;
-  DWORD region2SampleCount = region2Size/config->bytesPerSample;
-  for (uint32 index = 0; index < region2SampleCount; index++)
-  {
-    float32 time = 2.0f * PI32 * 
-        ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-    int16 sampleValue = sinf(time) * 4000;
-    // left
-    *sample = sampleValue;
-    sample++;
-    // right
-    *sample = sampleValue;
-    sample++;
-    (config->runningSampleIndex)++;
-  }
-
-  soundBuffer->Unlock(region1, region1Size, region2, region2Size);
 }

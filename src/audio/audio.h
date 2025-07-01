@@ -19,8 +19,7 @@
 
 namespace Audio
 {
-
-  /// @struct Configuration Manages state of the platform-independent audio buffer
+      /// @struct Configuration Manages state of the platform-independent audio buffer
   struct Configuration
   {
     int32 samplesPerSecond;
@@ -32,7 +31,6 @@ namespace Audio
     uint32 runningSampleIndex;
   };
 
-
       /**
        * Prepares Windows' DirectSound library and prepares sound buffers.
        * 
@@ -42,11 +40,7 @@ namespace Audio
        * audio service, such as frequency and sample rate.
        */
   void InitDirectSound(IDirectSoundBuffer**, HWND, Configuration);
-
   
-      // NOTE: This will change or be removed. No docstring needed.
-  void TestAudioBuffer(IDirectSoundBuffer*, Configuration*);
-
       /**
        * Fills sound buffer with a given audio sample.
        * TODO: Change to accepting an audio sample as parameter. Currently just uses a sine wave.
@@ -58,7 +52,9 @@ namespace Audio
        * @param bytesToWrite The number of bytes expected to write to.
        */
   void FillBuffer(IDirectSoundBuffer*, Configuration*, DWORD, DWORD);
-
+  
+      // NOTE: This will change or be removed. No docstring needed.
+  void TestAudioBuffer(IDirectSoundBuffer*, Configuration*);
   
       // NOTE: This will change or be removed. No docstring needed.
   int16 SineWave(float32, int32);

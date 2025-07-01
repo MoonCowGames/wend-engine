@@ -150,7 +150,6 @@ enum Key
 
 namespace Input
 {
-
   struct Keyboard
   {
     uint8 keyState[256];

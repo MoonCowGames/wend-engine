@@ -8,7 +8,6 @@
 
 #include "application.h"
 
-
 void App::InitApplication(Application* app)
 {
   app->isRunning = true;
@@ -18,7 +17,6 @@ void App::InitApplication(Application* app)
     app->keyboard.keyState[index] = 0;
   }
 }
-
 
 void App::FrameUpdate(float32 deltaTime)
 {
