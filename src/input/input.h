@@ -14,8 +14,6 @@
 
 #include "../misc/includes.h"
 
-
-
 enum State
 {
   IS_PRESSED = (1 << 0),

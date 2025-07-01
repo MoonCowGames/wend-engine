@@ -30,6 +30,7 @@ namespace Audio
     HMODULE directSoundLibrary = LoadLibraryA("dsound.dll");
     if (!directSoundLibrary)
     {
+      // TODO: Log error
       return;
     }
 
@@ -37,6 +38,7 @@ namespace Audio
     fn_DirectSoundCreate *DirectSoundCreate = (fn_DirectSoundCreate *)GetProcAddress(directSoundLibrary, "DirectSoundCreate");
     if (!DirectSoundCreate)
     {
+      // TODO: Log error
       return;
     }
 
@@ -44,12 +46,14 @@ namespace Audio
     LPDIRECTSOUND directSoundObj;
     if (DirectSoundCreate(0, &directSoundObj, NULL) < 0)
     {
+      // TODO: Log error
       return;
     }
 
     // Bind to window
     if (directSoundObj->SetCooperativeLevel(window, DSSCL_PRIORITY) < 0)
     {
+      // TODO: Log error
       return;
     }
 
@@ -75,10 +79,12 @@ namespace Audio
     if (directSoundObj->CreateSoundBuffer(
         &primaryBufferDesc, &primaryBuffer, NULL) < 0)
     {
+      // TODO: Log error
       return;
     }
     if (primaryBuffer->SetFormat(&waveFormat) < 0)
     {
+      // TODO: Log error
       return;
     }
 
@@ -92,6 +98,7 @@ namespace Audio
     if (directSoundObj->CreateSoundBuffer(
         &secondaryBufferDesc, soundBuffer, NULL) < 0)
     {
+      // TODO: Log error
       return;
     }
   }
@@ -108,6 +115,7 @@ namespace Audio
 
     if (soundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
     {
+      // TODO: Log error
       return;
     }
 
@@ -167,6 +175,7 @@ namespace Audio
                           &region1, &region1Size,
                           &region2, &region2Size, 0) < 0)
     {
+      // TODO: Log error
       return;
     }
 

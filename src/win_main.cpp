@@ -25,87 +25,7 @@
   - Windows XP controller support
  */
 
-#include "win_main.h"
-
-namespace Win32
-{
-  /**
-   * Displays the framebuffer on the window.
-   * 
-   * @param deviceContext A Windows structure required for displaying graphics.
-   * @param window The handle to the GUI window.
-   * @param buffer The framebuffer to be displayed.
-   * @param bitmapInfo Information Windows requires to display the framebuffer.
-   */
-  void BlitBuffer(HDC deviceContext, HWND window, AppState* appState)
-  {
-    RECT clientRect = {};
-    GetClientRect(window, &clientRect);
-    StretchDIBits(deviceContext,
-                  0, 0, clientRect.right, clientRect.bottom,
-                  0, 0, appState->app.buffer.width, appState->app.buffer.height,
-                  appState->app.buffer.bitmap, 
-                  &(appState->bitmapInfo),
-                  DIB_RGB_COLORS, SRCCOPY);
-  }
-
-  /**
-   * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
-   * 
-   * @param appState Struct containing framebuffer and BITMAPINFO
-   * @param width The new width of the window.
-   * @param height The new height of the window.
-   */
-  void OnResize(AppState* appState, int16 width, int16 height)
-  {
-    if (appState->app.buffer.bitmap)
-    {
-      VirtualFree(appState->app.buffer.bitmap, 0, MEM_RELEASE);
-    }
-
-    appState->app.buffer.width = width;
-    appState->app.buffer.height = height;
-    appState->bitmapInfo.bmiHeader.biWidth = width;
-    appState->bitmapInfo.bmiHeader.biHeight = -height;
-
-    const int8 bytesPerPixel = 4;
-    int32 bitmapSize = (width * height) * bytesPerPixel;
-    
-    appState->app.buffer.bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
-  }
-
-  /**
-   * Prepares Windows' XInput library and prepares function pointers 
-   * to XInput API. Allows for dynamic function loading in case end-user does
-   * not have the required XInput dll installed.
-   * 
-   * @param XInputGetState Function pointer to load XInput function into.
-   * Used to get the current state of a controller.
-   * @param XInputSetState Function pointer to load XInput function into.
-   * Used to set state of a controller for vibration.
-   */
-  void InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
-  {
-    // Get library
-    HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
-    if (!xInputLibrary)
-    {
-      return;
-    }
-
-    // Link function call to library
-    *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
-    if (!XInputGetState)
-    {
-      return;
-    }
-    *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
-    if (!XInputSetState)
-    {
-      return;
-    }
-  }
-}
+#include "./platform/windows/win32.h"
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
@@ -135,7 +55,7 @@ int WINAPI WinMain(HINSTANCE instance,
   appState->bitmapInfo.bmiHeader.biBitCount = 32;
   appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
   
-  OnResize(appState, width, height);
+  Win32::OnResize(appState, width, height);
   
   // Register window class.
   const char CLASS_NAME[] = "Wend Class";
@@ -356,13 +276,7 @@ LRESULT CALLBACK WindowProc(HWND window,
     }
     case WM_CLOSE:
     {
-      if (MessageBoxA(window, 
-                      "Are you sure you want to quit? Unsaved progress will be lost.", 
-                      "Wend", 
-                      MB_OKCANCEL) == IDOK)
-      {
-        DestroyWindow(window);
-      }
+      DestroyWindow(window);
       return 0;
     }
     case WM_DESTROY:
@@ -388,17 +302,13 @@ LRESULT CALLBACK WindowProc(HWND window,
     case WM_KEYUP:
     {
       uint8* keyState =  appState->app.keyboard.keyState;
+
+      //NOTE: Unsure if I want to keep map system for input.
       const std::map<size_t, Key> map = appState->app.keyboard.keyMap;
 
       if (wParam == VK_ESCAPE)
       {
-        if (MessageBoxA(window, 
-                        "Are you sure you want to quit? Unsaved progress will be lost.", 
-                        "Wend", 
-                        MB_OKCANCEL) == IDOK)
-        {
-          DestroyWindow(window);
-        }
+        DestroyWindow(window);
       }
 
       // Prevents out of bounds access in map

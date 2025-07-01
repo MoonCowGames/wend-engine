@@ -52,8 +52,7 @@ namespace Input
     return IsReleased(state) && !CheckKeyWasReleased(state);
   }
 
-  // In hindsight, why am i running this every frame? 
-  // Can't I just run this per key when their state changes?
+  // TODO: Consider rethinking this. Queue keys on state change?
   /**
    * Loops through all indexes in the keyState array and updates the WAS_PRESSED
    * state of the key to reflect any changes.

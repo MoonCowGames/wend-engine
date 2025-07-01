@@ -11,11 +11,11 @@
 #include <windows.h>
 #include <xinput.h>
 
-#include "framebuffer/framebuffer.h"
-#include "application/application.h"
-#include "input/input.h"
-#include "audio/audio.h"
-#include "misc/includes.h"
+#include "../../framebuffer/framebuffer.h"
+#include "../../application/application.h"
+#include "../../input/input.h"
+#include "../../audio/audio.h"
+#include "../../misc/includes.h"
 
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 typedef XINPUT_GET_STATE(fn_XInputGetState);
@@ -33,6 +33,7 @@ namespace Win32
   
   void BlitBuffer(HDC deviceContext, HWND window, AppState* appState);
   void InitXInput(fn_XInputGetState**, fn_XInputSetState**);
+  void OnResize(AppState* appState, int16 width, int16 height);
 }
 
 #endif //__WEND_WIN_MAIN_H__
