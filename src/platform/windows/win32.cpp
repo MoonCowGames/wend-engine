@@ -27,7 +27,6 @@ void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState
  * @param width The new width of the window.
  * @param height The new height of the window.
  */
-
 void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
 {
   if (appState->app.buffer.bitmap)
@@ -51,10 +50,8 @@ void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
  * to XInput API. Allows for dynamic function loading in case end-user does
  * not have the required XInput dll installed.
  * 
- * @param XInputGetState Function pointer to load XInput function into.
- * Used to get the current state of a controller.
- * @param XInputSetState Function pointer to load XInput function into.
- * Used to set state of a controller for vibration.
+ * @param XInputGetState Function pointer to load XInput function into. Used to get the current state of a controller.
+ * @param XInputSetState Function pointer to load XInput function into. Used to set state of a controller for vibration.
  */
 void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
 {

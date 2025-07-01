@@ -11,24 +11,21 @@
 
 #include "framebuffer.h"
 
-namespace Render
-{  
-  // NOTE: This will change or be removed. No docstring needed.
-  void RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset)
+// NOTE: This will change or be removed. No docstring needed.
+void Render::RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset)
+{
+  int pitch = buffer->width*4;
+  uint8* row = (uint8*)buffer->bitmap;
+  for(int y = 0; y < buffer->height; ++y)
   {
-    int pitch = buffer->width*4;
-    uint8* row = (uint8*)buffer->bitmap;
-    for(int y = 0; y < buffer->height; ++y)
+    uint32* pixel = (uint32*)row;
+    for(int x = 0; x < buffer->width; ++x)
     {
-      uint32* pixel = (uint32*)row;
-      for(int x = 0; x < buffer->width; ++x)
-      {
-        *pixel = (uint8)(x+xOffset) << 16 | 
-                (uint8)(y+yOffset) << 8 | 
-                255;
-        ++pixel;
-      }
-      row += pitch;
+      *pixel = (uint8)(x+xOffset) << 16 | 
+              (uint8)(y+yOffset) << 8 | 
+              255;
+      ++pixel;
     }
+    row += pitch;
   }
 }
