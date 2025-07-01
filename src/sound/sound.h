@@ -31,8 +31,15 @@ namespace Sound
     uint32 runningSampleIndex;
   };
 
-      // NOTE: This will change or be removed. No docstring needed.
-  int16 SineWave(float32, int32);
+  struct Buffer
+  {
+    int16 *samples;
+    int32 sampleCount;
+  };
+
+  void InitSoundBuffer(Sound::Buffer *soundBuffer, Sound::Configuration *soundCfg);
+
+  void FillSoundBuffer(Sound::Buffer *soundBuffer, Sound::Configuration *soundCfg);
 }
 
 #endif //__WEND_SOUND_H__

@@ -13,6 +13,7 @@
 
 #include "../framebuffer/framebuffer.h"
 #include "../input/input.h"
+#include "../sound/sound.h"
 #include "../misc/includes.h"
 
 namespace App
@@ -24,9 +25,11 @@ namespace App
     Input::Keyboard keyboard;
 
     // Rendering
-    Render::Framebuffer buffer;
+    Render::Framebuffer frameBuffer;
 
     // TODO: Add Audio service
+    Sound::Buffer soundBuffer;
+    Sound::Configuration soundCfg;
 
     // State
     bool isRunning;
@@ -46,7 +49,7 @@ namespace App
        * 
        * @param deltaTime The time in seconds between the last two frames
        */
-  void FrameUpdate(float32 deltaTime);
+  void FrameUpdate(Application* app, float32 deltaTime);
 }
 
 #endif //__WEND_APPLICATION_H__

@@ -70,7 +70,7 @@ namespace Win32
         /**
        * Prepares Windows' DirectSound library and prepares sound buffers.
        * 
-       * @param soundBuffer The secondary audio buffer that can be written to.
+       * @param directSoundBuffer The secondary audio buffer that can be written to.
        * @param window The handle to the GUI window to bind the audio service to.
        * @param config A struct containing configuration information about the 
        * audio service, such as frequency and sample rate.
@@ -81,16 +81,18 @@ namespace Win32
        * Fills sound buffer with a given audio sample.
        * TODO: Change to accepting an audio sample as parameter. Currently just uses a sine wave.
        * 
-       * @param soundBuffer The secondary audio buffer that can be written to.
+       * @param directSoundBuffer The secondary audio buffer that can be written to.
        * @param config A struct containing configuration information about the 
        * audio service, such as frequency and sample rate.
        * @param lockCursor Determines the point of the buffer to lock and prepare to write to.
        * @param bytesToWrite The number of bytes expected to write to.
        */
-  void FillDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*, DWORD, DWORD);
+  void FillDirectSoundBuffer(IDirectSoundBuffer*, Sound::Buffer*, Sound::Configuration*, DWORD, DWORD);
+
+  void ClearDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*, DWORD, DWORD);
   
       // NOTE: This will change or be removed. No docstring needed.
-  void TestDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*);
+  void TestDirectSoundBuffer(IDirectSoundBuffer*, Sound::Buffer*, Sound::Configuration*);
 }
 
 #endif //__WEND_WIN32_H__

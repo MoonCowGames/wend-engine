@@ -50,10 +50,18 @@ int WINAPI WinMain(HINSTANCE instance,
 
   Win32::AppState* appState = (Win32::AppState*)malloc(sizeof(Win32::AppState));
   App::InitApplication(&(appState->app));
+
   appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
   appState->bitmapInfo.bmiHeader.biPlanes = 1;
   appState->bitmapInfo.bmiHeader.biBitCount = 32;
   appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+  appState->app.soundBuffer.samples = (int16 *)VirtualAlloc(
+    0, 
+    appState->app.soundCfg.bufferSize, 
+    MEM_RESERVE | MEM_COMMIT, 
+    PAGE_READWRITE
+  );
   
   Win32::OnResize(appState, width, height);
   
@@ -93,19 +101,10 @@ int WINAPI WinMain(HINSTANCE instance,
     return 0;
   }
 
-  IDirectSoundBuffer* soundBuffer = {}; 
-  Sound::Configuration soundCfg = {};
-  soundCfg.samplesPerSecond = 48000;
-  soundCfg.frequency = 261;
-  soundCfg.volume = 4000;
-  soundCfg.wavePeriod = soundCfg.samplesPerSecond / soundCfg.frequency;
-  soundCfg.bytesPerSample = sizeof(int16)*2;
-  soundCfg.bufferSize = soundCfg.samplesPerSecond * soundCfg.bytesPerSample;
-  soundCfg.runningSampleIndex = 0;
-
-  Win32::InitDirectSoundBuffer(&soundBuffer, window, soundCfg);
-  Win32::FillDirectSoundBuffer(soundBuffer, &soundCfg, 0, soundCfg.bufferSize);
-  soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
+  IDirectSoundBuffer* directSoundBuffer = {}; 
+  Win32::InitDirectSoundBuffer(&directSoundBuffer, window, appState->app.soundCfg);
+  Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState->app.soundCfg), 0, appState->app.soundCfg.bufferSize);
+  directSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
   fn_XInputGetState* XInputGetState = nullptr;
   fn_XInputSetState* XInputSetState = nullptr;
@@ -216,11 +215,44 @@ int WINAPI WinMain(HINSTANCE instance,
       xOffset--;
     }
 
-    App::FrameUpdate(deltaTime);
+    DWORD playCursor = 0;
+    DWORD writeCursor = 0;
 
-    Render::RenderGradient(&(appState->app.buffer), xOffset, yOffset);
+    if (directSoundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
+    {
+      // TODO: Log error
+      return 0;
+    }
+
+    // Keeps range within bufferSize values
+    DWORD lockCursor = ((appState->app.soundCfg.runningSampleIndex) * appState->app.soundCfg.bytesPerSample) % appState->app.soundCfg.bufferSize;
+    DWORD bytesToWrite = 0;
+
+    /* if (lockCursor == playCursor)
+    {
+        bytesToWrite = 0;
+    } */
+    if (lockCursor > playCursor)
+    {
+      // Gets space marked ====
+      // ||==============[PC]------------[LC]================||
+      bytesToWrite = (appState->app.soundCfg.bufferSize - lockCursor);
+      bytesToWrite += playCursor; 
+    }
+    else
+    {
+      // Gets space marked ====
+      // ||--------------[LC]============[PC]----------------||
+      bytesToWrite = playCursor - lockCursor;
+    }
+
+    appState->app.soundBuffer.sampleCount = bytesToWrite / appState->app.soundCfg.bytesPerSample;
+
+    App::FrameUpdate(&(appState->app), deltaTime);
+
+    Render::RenderGradient(&(appState->app.frameBuffer), xOffset, yOffset);
     
-    Win32::TestDirectSoundBuffer(soundBuffer, &soundCfg);
+    Win32::FillDirectSoundBuffer(directSoundBuffer, &(appState->app.soundBuffer), &(appState->app.soundCfg), lockCursor, bytesToWrite);
 
     HDC deviceContext = GetDC(window);
     Win32::BlitBuffer(deviceContext, window, appState);
@@ -233,8 +265,19 @@ int WINAPI WinMain(HINSTANCE instance,
     lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
-  free(appState);
-  appState = NULL;
+  if (appState) 
+  { 
+    if (appState->app.frameBuffer.bitmap)
+    {
+      VirtualFree(appState->app.frameBuffer.bitmap, 0, MEM_RELEASE);
+    }
+    if (appState->app.soundBuffer.samples)
+    {
+      VirtualFree(appState->app.soundBuffer.samples, 0, MEM_RELEASE);
+    }
+    free(appState); 
+    appState = NULL;
+  }
   return 0;
 }
 

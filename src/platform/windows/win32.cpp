@@ -6,8 +6,8 @@ void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState
   GetClientRect(window, &clientRect);
   StretchDIBits(deviceContext,
                 0, 0, clientRect.right, clientRect.bottom,
-                0, 0, appState->app.buffer.width, appState->app.buffer.height,
-                appState->app.buffer.bitmap, 
+                0, 0, appState->app.frameBuffer.width, appState->app.frameBuffer.height,
+                appState->app.frameBuffer.bitmap, 
                 &(appState->bitmapInfo),
                 DIB_RGB_COLORS, SRCCOPY);
 }
@@ -36,24 +36,29 @@ void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** X
 
 void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
 {
-  if (appState->app.buffer.bitmap)
+  if (appState->app.frameBuffer.bitmap)
   {
-    VirtualFree(appState->app.buffer.bitmap, 0, MEM_RELEASE);
+    VirtualFree(appState->app.frameBuffer.bitmap, 0, MEM_RELEASE);
   }
 
-  appState->app.buffer.width = width;
-  appState->app.buffer.height = height;
+  appState->app.frameBuffer.width = width;
+  appState->app.frameBuffer.height = height;
   appState->bitmapInfo.bmiHeader.biWidth = width;
   appState->bitmapInfo.bmiHeader.biHeight = -height;
 
   const int8 bytesPerPixel = 4;
   int32 bitmapSize = (width * height) * bytesPerPixel;
   
-  appState->app.buffer.bitmap = VirtualAlloc(0, bitmapSize, MEM_COMMIT, PAGE_READWRITE);
+  appState->app.frameBuffer.bitmap = VirtualAlloc(
+    0, 
+    bitmapSize, 
+    MEM_RESERVE | MEM_COMMIT, 
+    PAGE_READWRITE
+  );
 }
 
 void Win32::InitDirectSoundBuffer(
-  IDirectSoundBuffer** soundBuffer, 
+  IDirectSoundBuffer** directSoundBuffer, 
   HWND window, 
   Sound::Configuration config)
 {
@@ -127,15 +132,15 @@ void Win32::InitDirectSoundBuffer(
   secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
   if (directSoundObj->CreateSoundBuffer(
-      &secondaryBufferDesc, soundBuffer, NULL) < 0)
+      &secondaryBufferDesc, directSoundBuffer, NULL) < 0)
   {
     // TODO: Log error
     return;
   }
 }
 
-void Win32::FillDirectSoundBuffer(
-  IDirectSoundBuffer* soundBuffer, 
+void Win32::ClearDirectSoundBuffer(
+  IDirectSoundBuffer* directSoundBuffer, 
   Sound::Configuration* config, 
   DWORD lockCursor, 
   DWORD bytesToWrite)
@@ -145,7 +150,7 @@ void Win32::FillDirectSoundBuffer(
   void* region2;
   DWORD region2Size;
   
-  if (soundBuffer->Lock(lockCursor, bytesToWrite,
+  if (directSoundBuffer->Lock(lockCursor, bytesToWrite,
         &region1, &region1Size,
         &region2, &region2Size, 0) < 0)
   {
@@ -153,77 +158,90 @@ void Win32::FillDirectSoundBuffer(
     return;
   }
   
-  int16* sample = (int16 *)region1;
+  int16* destSample = (int16 *)region1;
   DWORD region1SampleCount = region1Size/config->bytesPerSample;
   for (uint32 index = 0; index < region1SampleCount; index++)
   {
-    float32 time = 2.0f * PI32 * ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-    int16 sampleValue = sinf(time) * 4000;
     // left
-    *sample = sampleValue;
-    sample++;
+    *destSample++ = 0;
     // right
-    *sample = sampleValue;
-    sample++;
-    (config->runningSampleIndex)++;
+    *destSample++ = 0;
   }
   
-  sample = (int16 *)region2;
+  destSample = (int16 *)region2;
   DWORD region2SampleCount = region2Size/config->bytesPerSample;
   for (uint32 index = 0; index < region2SampleCount; index++)
   {
-    float32 time = 2.0f * PI32 * 
-    ((float32)(config->runningSampleIndex) / (float32)config->wavePeriod); 
-    int16 sampleValue = sinf(time) * 4000;
     // left
-    *sample = sampleValue;
-    sample++;
+    *destSample++ = 0;
     // right
-    *sample = sampleValue;
-    sample++;
-    (config->runningSampleIndex)++;
+    *destSample++ = 0;
   }
   
-  soundBuffer->Unlock(region1, region1Size, region2, region2Size);
+  directSoundBuffer->Unlock(region1, region1Size, region2, region2Size);
 }
 
-void Win32::TestDirectSoundBuffer(
-  IDirectSoundBuffer* soundBuffer, 
-  Sound::Configuration* config)
+void Win32::FillDirectSoundBuffer(
+  IDirectSoundBuffer* directSoundBuffer, 
+  Sound::Buffer* sourceSoundBuffer,
+  Sound::Configuration* config, 
+  DWORD lockCursor, 
+  DWORD bytesToWrite)
 {
-  //int32 halfPeriod = wavePeriod >> 1;
-  int32 bytesPerSample = sizeof(int16)*2;
-
-  DWORD playCursor;
-  DWORD writeCursor;
-
-  if (soundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
+  void* region1;
+  DWORD region1Size;
+  void* region2;
+  DWORD region2Size;
+  
+  if (directSoundBuffer->Lock(lockCursor, bytesToWrite,
+        &region1, &region1Size,
+        &region2, &region2Size, 0) < 0)
   {
     // TODO: Log error
     return;
   }
-
-  // Keeps range within bufferSize values
-  DWORD lockCursor = ((config->runningSampleIndex) * bytesPerSample) % config->bufferSize;
-  DWORD bytesToWrite = 0;
-
-  if (lockCursor == playCursor)
+  
+  int16* destSample = (int16 *)region1;
+  int16* srcSample = sourceSoundBuffer->samples;
+  DWORD region1SampleCount = region1Size/config->bytesPerSample;
+  for (
+    uint32 index = 0;
+    index < region1SampleCount && index < sourceSoundBuffer->sampleCount; 
+    index++
+  )
   {
-      bytesToWrite = 0;
+    // left
+    *destSample++ = *srcSample++;
+    // right
+    *destSample++ = *srcSample++;
+    (config->runningSampleIndex)++;
   }
-  else if (lockCursor > playCursor)
+  
+  destSample = (int16 *)region2;
+  DWORD region2SampleCount = region2Size/config->bytesPerSample;
+  for (
+    uint32 index = 0; 
+    index < region2SampleCount && index < sourceSoundBuffer->sampleCount; 
+    index++
+  )
   {
-    // Gets space marked ====
-    // ||==============[PC]------------[LC]================||
-    bytesToWrite = (config->bufferSize - lockCursor);
-    bytesToWrite += playCursor; 
+    
+    // left
+    *destSample++ = *srcSample++;
+    // right
+    *destSample++ = *srcSample++;
+    (config->runningSampleIndex)++;
   }
-  else
-  {
-    // Gets space marked ====
-    // ||--------------[LC]============[PC]----------------||
-    bytesToWrite = playCursor - lockCursor;
-  }
+  
+  directSoundBuffer->Unlock(region1, region1Size, region2, region2Size);
+}
 
-  FillDirectSoundBuffer(soundBuffer, config, lockCursor, bytesToWrite);
+void Win32::TestDirectSoundBuffer(
+  IDirectSoundBuffer* directSoundBuffer, 
+  Sound::Buffer* sourceSoundBuffer,
+  Sound::Configuration* config)
+{
+  
+
+  //FillDirectSoundBuffer(directSoundBuffer, sourceSoundBuffer, config, lockCursor, bytesToWrite);
 }

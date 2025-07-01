@@ -11,14 +11,14 @@
 
 #include "framebuffer.h"
 
-void Render::RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset)
+void Render::RenderGradient(Render::Framebuffer* frameBuffer, int32 xOffset, int32 yOffset)
 {
-  int pitch = buffer->width*4;
-  uint8* row = (uint8*)buffer->bitmap;
-  for(int y = 0; y < buffer->height; ++y)
+  int pitch = frameBuffer->width*4;
+  uint8* row = (uint8*)frameBuffer->bitmap;
+  for(int y = 0; y < frameBuffer->height; ++y)
   {
     uint32* pixel = (uint32*)row;
-    for(int x = 0; x < buffer->width; ++x)
+    for(int x = 0; x < frameBuffer->width; ++x)
     {
       *pixel = (uint8)(x+xOffset) << 16 | 
               (uint8)(y+yOffset) << 8 | 

@@ -16,9 +16,12 @@ void App::InitApplication(Application* app)
   {
     app->keyboard.keyState[index] = 0;
   }
+
+  Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 }
 
-void App::FrameUpdate(float32 deltaTime)
+void App::FrameUpdate(Application* app, float32 deltaTime)
 {
   // TODO: Process per-frame changes.
+  Sound::FillSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 }
