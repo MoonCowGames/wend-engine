@@ -14,14 +14,18 @@
 #include "../../framebuffer/framebuffer.h"
 #include "../../application/application.h"
 #include "../../input/input.h"
-#include "../../audio/audio.h"
+#include "../../sound/sound.h"
 #include "../../misc/includes.h"
 
+// Handling dynamic loading of DLLs
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 typedef XINPUT_GET_STATE(fn_XInputGetState);
 
 #define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
 typedef XINPUT_SET_STATE(fn_XInputSetState);
+
+#define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID guiDevice, LPDIRECTSOUND* directSound, LPUNKNOWN outer);
+typedef DIRECT_SOUND_CREATE(fn_DirectSoundCreate);
 
 namespace Win32
 {
@@ -62,6 +66,31 @@ namespace Win32
        * @param height The new height of the window.
        */
   void OnResize(AppState* appState, int16 width, int16 height);
+
+        /**
+       * Prepares Windows' DirectSound library and prepares sound buffers.
+       * 
+       * @param soundBuffer The secondary audio buffer that can be written to.
+       * @param window The handle to the GUI window to bind the audio service to.
+       * @param config A struct containing configuration information about the 
+       * audio service, such as frequency and sample rate.
+       */
+  void InitDirectSoundBuffer(IDirectSoundBuffer**, HWND, Sound::Configuration);
+  
+      /**
+       * Fills sound buffer with a given audio sample.
+       * TODO: Change to accepting an audio sample as parameter. Currently just uses a sine wave.
+       * 
+       * @param soundBuffer The secondary audio buffer that can be written to.
+       * @param config A struct containing configuration information about the 
+       * audio service, such as frequency and sample rate.
+       * @param lockCursor Determines the point of the buffer to lock and prepare to write to.
+       * @param bytesToWrite The number of bytes expected to write to.
+       */
+  void FillDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*, DWORD, DWORD);
+  
+      // NOTE: This will change or be removed. No docstring needed.
+  void TestDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*);
 }
 
 #endif //__WEND_WIN32_H__

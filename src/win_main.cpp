@@ -94,17 +94,17 @@ int WINAPI WinMain(HINSTANCE instance,
   }
 
   IDirectSoundBuffer* soundBuffer = {}; 
-  Audio::Configuration audioCfg = {};
-  audioCfg.samplesPerSecond = 48000;
-  audioCfg.frequency = 261;
-  audioCfg.volume = 4000;
-  audioCfg.wavePeriod = audioCfg.samplesPerSecond / audioCfg.frequency;
-  audioCfg.bytesPerSample = sizeof(int16)*2;
-  audioCfg.bufferSize = audioCfg.samplesPerSecond * audioCfg.bytesPerSample;
-  audioCfg.runningSampleIndex = 0;
+  Sound::Configuration soundCfg = {};
+  soundCfg.samplesPerSecond = 48000;
+  soundCfg.frequency = 261;
+  soundCfg.volume = 4000;
+  soundCfg.wavePeriod = soundCfg.samplesPerSecond / soundCfg.frequency;
+  soundCfg.bytesPerSample = sizeof(int16)*2;
+  soundCfg.bufferSize = soundCfg.samplesPerSecond * soundCfg.bytesPerSample;
+  soundCfg.runningSampleIndex = 0;
 
-  Audio::InitDirectSound(&soundBuffer, window, audioCfg);
-  Audio::FillBuffer(soundBuffer, &audioCfg, 0, audioCfg.bufferSize);
+  Win32::InitDirectSoundBuffer(&soundBuffer, window, soundCfg);
+  Win32::FillDirectSoundBuffer(soundBuffer, &soundCfg, 0, soundCfg.bufferSize);
   soundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
   fn_XInputGetState* XInputGetState = nullptr;
@@ -220,7 +220,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
     Render::RenderGradient(&(appState->app.buffer), xOffset, yOffset);
     
-    Audio::TestAudioBuffer(soundBuffer, &audioCfg);
+    Win32::TestDirectSoundBuffer(soundBuffer, &soundCfg);
 
     HDC deviceContext = GetDC(window);
     Win32::BlitBuffer(deviceContext, window, appState);
