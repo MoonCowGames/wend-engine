@@ -13,13 +13,16 @@
 
 namespace Render
 {
+
+  /// @struct Framebuffer Manages state of the platform-independent framebuffer
   struct Framebuffer
   {
+    void* bitmap;
     int16 width;
     int16 height;
-    void* bitmap;
   };
   
+  // NOTE: This will change or be removed. No docstring needed.
   void RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset);
 }
 

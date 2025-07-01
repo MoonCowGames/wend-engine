@@ -17,6 +17,7 @@
 
 namespace App
 {
+  /// @struct Application Manages state of the platform-independent application
   struct Application
   {
     // Input
@@ -31,7 +32,20 @@ namespace App
     bool isRunning;
   };
 
+      /**
+       * Allocates and creates an instance of an Application struct.
+       * 
+       * @param width Width of window in pixels.
+       * @param height Height of window in pixels.
+       * @return Returns pointer to the application being initialised.
+       */
   void InitApplication(Application*);
+
+      /**
+       * Processes per-frame changes of entities.
+       * 
+       * @param deltaTime The time in seconds between the last two frames
+       */
   void FrameUpdate(float32 deltaTime);
 }
 

@@ -11,7 +11,6 @@
 
 #include "framebuffer.h"
 
-// NOTE: This will change or be removed. No docstring needed.
 void Render::RenderGradient(Render::Framebuffer* buffer, int32 xOffset, int32 yOffset)
 {
   int pitch = buffer->width*4;

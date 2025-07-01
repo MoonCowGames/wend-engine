@@ -223,13 +223,32 @@ namespace Input
     };
   };
 
-  bool IsPressed(uint8);
-  bool WasPressed(uint8);
-  bool IsHeld(uint8);
-  bool IsJustPressed(uint8);
+      ///@param state Input state bitfield.
+      ///@return Returns true if key is pressed, else false.
+  bool IsPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key was pressed, else false.
+  bool WasPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true only if key is pressed this frame but last frame it was not, else false.
+  bool IsJustPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key is released, else false.
   bool IsReleased(uint8);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true only if key is released this frame but last frame it was not, else false.
   bool IsJustReleased(uint8);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key was released, else false.
   bool CheckKeyWasReleased(uint8);
+
+      ///@brief Iterates keys and updates with changes.
+      ///@param keyState Array of input state bitfields.
   void PoolKeyState(uint8*);
 }
 

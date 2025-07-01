@@ -11,14 +11,7 @@
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID guiDevice, LPDIRECTSOUND* directSound, LPUNKNOWN outer);
 typedef DIRECT_SOUND_CREATE(fn_DirectSoundCreate);
 
-/**
- * Prepares Windows' DirectSound library and prepares sound buffers.
- * 
- * @param soundBuffer The secondary audio buffer that can be written to.
- * @param window The handle to the GUI window to bind the audio service to.
- * @param config A struct containing configuration information about the 
- * audio service, such as frequency and sample rate.
- */
+
 void Audio::InitDirectSound(IDirectSoundBuffer** soundBuffer, 
                       HWND window, 
                       Audio::Configuration config)
@@ -100,7 +93,6 @@ void Audio::InitDirectSound(IDirectSoundBuffer** soundBuffer,
   }
 }
 
-// NOTE: This will change or be removed. No docstring needed.
 void Audio::TestAudioBuffer(IDirectSoundBuffer* soundBuffer, 
                       Audio::Configuration* config)
 {
@@ -142,22 +134,12 @@ void Audio::TestAudioBuffer(IDirectSoundBuffer* soundBuffer,
   
 }
 
-// NOTE: This will change or be removed. No docstring needed.
 int16 SineWave(float32 time, int32 volume)
 {
   return (int16)(sinf(time)*(float32)volume);
 }
 
-/**
- * Fills sound buffer with a given audio sample.
- * TODO: Change to accepting an audio sample as parameter. Currently just uses a sine wave.
- * 
- * @param soundBuffer The secondary audio buffer that can be written to.
- * @param config A struct containing configuration information about the 
- * audio service, such as frequency and sample rate.
- * @param lockCursor Determines the point of the buffer to lock and prepare to write to.
- * @param bytesToWrite The number of bytes expected to write to.
- */
+
 void Audio::FillBuffer(IDirectSoundBuffer* soundBuffer, 
                 Audio::Configuration* config, 
                 DWORD lockCursor, 
