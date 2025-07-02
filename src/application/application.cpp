@@ -49,6 +49,8 @@ void App::FrameUpdate(Application* app, float32 deltaTime)
     xOffset--;
   }
 
+  // TODO: Test controller in Application
+
   Render::RenderGradient(&(app->frameBuffer), xOffset, yOffset);
 
   Sound::FillSoundBuffer(&(app->soundBuffer), &(app->soundCfg));

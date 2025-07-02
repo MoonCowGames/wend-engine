@@ -1,3 +1,11 @@
+/*
++------------------------------------------------------------------------------+
+|File: win32.h                                                                 |
+|Author: Luna Artemis Dorn                                                     |
+|Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
++------------------------------------------------------------------------------+
+*/
+
 #include "win32.h"
 
 void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState)
@@ -234,14 +242,4 @@ void Win32::FillDirectSoundBuffer(
   }
   
   directSoundBuffer->Unlock(region1, region1Size, region2, region2Size);
-}
-
-void Win32::TestDirectSoundBuffer(
-  IDirectSoundBuffer* directSoundBuffer, 
-  Sound::Buffer* sourceSoundBuffer,
-  Sound::Configuration* config)
-{
-  
-
-  //FillDirectSoundBuffer(directSoundBuffer, sourceSoundBuffer, config, lockCursor, bytesToWrite);
 }
