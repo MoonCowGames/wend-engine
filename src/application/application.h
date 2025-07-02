@@ -23,6 +23,7 @@ namespace App
   {
     // Input
     Input::Keyboard keyboard;
+    Input::Gamepad gamepad[4];
 
     // Rendering
     Render::Framebuffer frameBuffer;

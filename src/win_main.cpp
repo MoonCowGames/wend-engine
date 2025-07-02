@@ -138,57 +138,47 @@ int WINAPI WinMain(HINSTANCE instance,
 
     // TODO: Platform independant gamepad and send to app
     // Only attempt to read controller information if XInput is loaded
-    // if (XInputGetState) 
-    // {
-    //   for(int controllerIndex = 0; 
-    //       controllerIndex < XUSER_MAX_COUNT; 
-    //       controllerIndex++)
-    //   {
-    //     XINPUT_STATE controllerState;
-    //     if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
-    //     {
-    //       XINPUT_GAMEPAD* gamepad = &controllerState.Gamepad;
+    if (XInputGetState) 
+    {
+      for(int controllerIndex = 0; 
+          controllerIndex < XUSER_MAX_COUNT; 
+          controllerIndex++)
+      {
+        XINPUT_STATE controllerState;
+        if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
+        {
+          XINPUT_GAMEPAD* systemGamepad = &controllerState.Gamepad;
+          Input::Gamepad* appGamepad = &(appState->app.gamepad[controllerIndex]);
+          appGamepad->dpadUp = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP) > 0;
+          appGamepad->dpadDown = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN) > 0;
+          appGamepad->dpadLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT) > 0;
+          appGamepad->dpadRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) > 0;
+          appGamepad->faceBottom = (systemGamepad->wButtons & XINPUT_GAMEPAD_A) > 0;
+          appGamepad->faceRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_B) > 0;
+          appGamepad->faceLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_X) > 0;
+          appGamepad->faceTop = (systemGamepad->wButtons & XINPUT_GAMEPAD_Y) > 0;
+          appGamepad->shoulderLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) > 0;
+          appGamepad->shoulderRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) > 0;
+          appGamepad->thumbstickLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB) > 0;
+          appGamepad->thumbstickRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) > 0;
+          appGamepad->start = (systemGamepad->wButtons & XINPUT_GAMEPAD_START) > 0;
+          appGamepad->select = (systemGamepad->wButtons & XINPUT_GAMEPAD_BACK) > 0;
 
-    //       bool dpadUp = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
-    //       bool dpadDown = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-    //       bool dpadLeft = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-    //       bool dpadRight = gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
-    //       bool faceBottom = gamepad->wButtons & XINPUT_GAMEPAD_A;
-    //       bool faceRight = gamepad->wButtons & XINPUT_GAMEPAD_B;
-    //       bool faceLeft = gamepad->wButtons & XINPUT_GAMEPAD_X;
-    //       bool faceTop = gamepad->wButtons & XINPUT_GAMEPAD_Y;
-    //       bool shoulderLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
-    //       bool shoulderRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
-    //       bool thumbstickLeft = gamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
-    //       bool thumbstickRight = gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
-    //       bool start = gamepad->wButtons & XINPUT_GAMEPAD_START;
-    //       bool select = gamepad->wButtons & XINPUT_GAMEPAD_BACK;
+          appGamepad->triggerLeft = systemGamepad->bLeftTrigger;
+          appGamepad->triggerRight = systemGamepad->bRightTrigger;
 
-    //       int8 triggerLeft = gamepad->bLeftTrigger;
-    //       int8 triggerRight = gamepad->bRightTrigger;
-
-    //       int16 xAxisLeft = gamepad->sThumbLX;
-    //       int16 yAxisLeft = gamepad->sThumbLY;
+          appGamepad->xAxisLeft = systemGamepad->sThumbLX;
+          appGamepad->yAxisLeft = systemGamepad->sThumbLY;
           
-    //       int16 xAxisRight = gamepad->sThumbRX;
-    //       int16 yAxisRight = gamepad->sThumbRY;
-
-    //       int16 deadzone = 2000;
-    //       if (abs(xAxisLeft) > deadzone)
-    //       {          
-    //         xOffset -= (xAxisLeft >> 12);
-    //       }
-    //       if (abs(yAxisLeft) > deadzone)
-    //       {          
-    //         yOffset += (yAxisLeft >> 12);
-    //       }
-    //     }
-    //     else
-    //     {
-    //       continue;
-    //     }
-    //   }
-    // }
+          appGamepad->xAxisRight = systemGamepad->sThumbRX;
+          appGamepad->yAxisRight = systemGamepad->sThumbRY;
+        }
+        else
+        {
+          continue;
+        }
+      }
+    }
 
     // TODO: Move to function
     DWORD playCursor = 0;

@@ -150,6 +150,7 @@ enum Key
 
 namespace Input
 {
+  // TODO: Consider changing this struct
   struct Keyboard
   {
     uint8 keyState[256];
@@ -220,6 +221,33 @@ namespace Input
       {VK_UP, Key::UP},     {VK_DOWN, Key::DOWN}, 
       {VK_LEFT, Key::LEFT}, {VK_RIGHT, Key::RIGHT},
     };
+  };
+
+  struct Gamepad
+  {
+    uint8 dpadUp;
+    uint8 dpadDown;
+    uint8 dpadLeft;
+    uint8 dpadRight;
+    uint8 faceBottom;
+    uint8 faceRight;
+    uint8 faceLeft;
+    uint8 faceTop;
+    uint8 shoulderLeft;
+    uint8 shoulderRight;
+    uint8 thumbstickLeft;
+    uint8 thumbstickRight;
+    uint8 start;
+    uint8 select;
+
+    uint8 triggerLeft;
+    uint8 triggerRight;
+
+    int16 xAxisLeft;
+    int16 yAxisLeft;
+    
+    int16 xAxisRight;
+    int16 yAxisRight;
   };
 
       ///@param state Input state bitfield.
