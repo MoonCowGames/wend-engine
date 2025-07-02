@@ -59,6 +59,8 @@ namespace Win32
        */
   void InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState);
 
+  void PoolGamepadInput(fn_XInputGetState* XInputGetState, AppState* appState);
+
       /**
        * Changes size allocated in memory for the framebuffer bitmap when the window resizes.
        * 
@@ -73,17 +75,17 @@ namespace Win32
        * 
        * @param directSoundBuffer The secondary audio buffer that can be written to.
        * @param window The handle to the GUI window to bind the audio service to.
-       * @param config A struct containing configuration information about the 
+       * @param soundCfg A struct containing configuration information about the 
        * audio service, such as frequency and sample rate.
        */
-  void InitDirectSoundBuffer(IDirectSoundBuffer**, HWND, Sound::Configuration);
+  void InitDirectSoundBuffer(IDirectSoundBuffer**, HWND, Sound::Configuration*);
   
       /**
        * Fills sound buffer with a given audio sample.
        * TODO: Change to accepting an audio sample as parameter. Currently just uses a sine wave.
        * 
        * @param directSoundBuffer The secondary audio buffer that can be written to.
-       * @param config A struct containing configuration information about the 
+       * @param soundCfg A struct containing configuration information about the 
        * audio service, such as frequency and sample rate.
        * @param lockCursor Determines the point of the buffer to lock and prepare to write to.
        * @param bytesToWrite The number of bytes expected to write to.
@@ -92,8 +94,7 @@ namespace Win32
 
   void ClearDirectSoundBuffer(IDirectSoundBuffer*, Sound::Configuration*, DWORD, DWORD);
   
-      // NOTE: This will change or be removed. No docstring needed.
-  void TestDirectSoundBuffer(IDirectSoundBuffer*, Sound::Buffer*, Sound::Configuration*);
+  void GetDirectSoundState(IDirectSoundBuffer*, Sound::Buffer*, Sound::Configuration*, DWORD*, DWORD*);
 }
 
 #endif //__WEND_WIN32_H__

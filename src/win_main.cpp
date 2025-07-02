@@ -102,7 +102,7 @@ int WINAPI WinMain(HINSTANCE instance,
   }
 
   IDirectSoundBuffer* directSoundBuffer = {}; 
-  Win32::InitDirectSoundBuffer(&directSoundBuffer, window, appState->app.soundCfg);
+  Win32::InitDirectSoundBuffer(&directSoundBuffer, window, &(appState->app.soundCfg));
   Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState->app.soundCfg), 0, appState->app.soundCfg.bufferSize);
   directSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
@@ -136,84 +136,12 @@ int WINAPI WinMain(HINSTANCE instance,
       DispatchMessage(&message);
     }
 
-    // TODO: Platform independant gamepad and send to app
-    // Only attempt to read controller information if XInput is loaded
-    if (XInputGetState) 
-    {
-      for(int controllerIndex = 0; 
-          controllerIndex < XUSER_MAX_COUNT; 
-          controllerIndex++)
-      {
-        XINPUT_STATE controllerState;
-        if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
-        {
-          XINPUT_GAMEPAD* systemGamepad = &controllerState.Gamepad;
-          Input::Gamepad* appGamepad = &(appState->app.gamepad[controllerIndex]);
-          appGamepad->dpadUp = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP) > 0;
-          appGamepad->dpadDown = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN) > 0;
-          appGamepad->dpadLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT) > 0;
-          appGamepad->dpadRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) > 0;
-          appGamepad->faceBottom = (systemGamepad->wButtons & XINPUT_GAMEPAD_A) > 0;
-          appGamepad->faceRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_B) > 0;
-          appGamepad->faceLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_X) > 0;
-          appGamepad->faceTop = (systemGamepad->wButtons & XINPUT_GAMEPAD_Y) > 0;
-          appGamepad->shoulderLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) > 0;
-          appGamepad->shoulderRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) > 0;
-          appGamepad->thumbstickLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB) > 0;
-          appGamepad->thumbstickRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) > 0;
-          appGamepad->start = (systemGamepad->wButtons & XINPUT_GAMEPAD_START) > 0;
-          appGamepad->select = (systemGamepad->wButtons & XINPUT_GAMEPAD_BACK) > 0;
+    PoolGamepadInput(XInputGetState, appState);
 
-          appGamepad->triggerLeft = systemGamepad->bLeftTrigger;
-          appGamepad->triggerRight = systemGamepad->bRightTrigger;
-
-          appGamepad->xAxisLeft = systemGamepad->sThumbLX;
-          appGamepad->yAxisLeft = systemGamepad->sThumbLY;
-          
-          appGamepad->xAxisRight = systemGamepad->sThumbRX;
-          appGamepad->yAxisRight = systemGamepad->sThumbRY;
-        }
-        else
-        {
-          continue;
-        }
-      }
-    }
-
-    // TODO: Move to function
-    DWORD playCursor = 0;
-    DWORD writeCursor = 0;
-
-    if (directSoundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
-    {
-      // TODO: Log error
-      return 0;
-    }
-
-    // Keeps range within bufferSize values
-    DWORD lockCursor = ((appState->app.soundCfg.runningSampleIndex) * appState->app.soundCfg.bytesPerSample) % appState->app.soundCfg.bufferSize;
+    DWORD lockCursor = 0;
     DWORD bytesToWrite = 0;
 
-    /* if (lockCursor == playCursor)
-    {
-        bytesToWrite = 0;
-    } */
-    if (lockCursor > playCursor)
-    {
-      // Gets space marked ====
-      // ||==============[PC]------------[LC]================||
-      bytesToWrite = (appState->app.soundCfg.bufferSize - lockCursor);
-      bytesToWrite += playCursor; 
-    }
-    else
-    {
-      // Gets space marked ====
-      // ||--------------[LC]============[PC]----------------||
-      bytesToWrite = playCursor - lockCursor;
-    }
-    // End todo
-
-    appState->app.soundBuffer.sampleCount = bytesToWrite / appState->app.soundCfg.bytesPerSample;
+    Win32::GetDirectSoundState(directSoundBuffer, &(appState->app.soundBuffer), &(appState->app.soundCfg), &lockCursor, &bytesToWrite);
 
     App::FrameUpdate(&(appState->app), deltaTime);
     
@@ -223,7 +151,7 @@ int WINAPI WinMain(HINSTANCE instance,
     Win32::BlitBuffer(deviceContext, window, appState);
     ReleaseDC(window, deviceContext);
 
-    QueryPerformanceCounter(&currentCounter);
+    QueryPerformanceCounter(&currentCoundter);
     int64 counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
     deltaTime = (float32)counterElapsed / counterFrequency.QuadPart;
 

@@ -8,6 +8,8 @@
 
 #include "win32.h"
 
+// Window Services
+
 void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState)
 {
   RECT clientRect = {};
@@ -18,28 +20,6 @@ void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState
                 appState->app.frameBuffer.bitmap, 
                 &(appState->bitmapInfo),
                 DIB_RGB_COLORS, SRCCOPY);
-}
-
-void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
-{
-  // Get library
-  HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
-  if (!xInputLibrary)
-  {
-    return;
-  }
-  
-  // Link function call to library
-  *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
-  if (!XInputGetState)
-  {
-    return;
-  }
-  *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
-  if (!XInputSetState)
-  {
-    return;
-  }
 }
 
 void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
@@ -65,10 +45,83 @@ void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
   );
 }
 
+// Gamepad Services
+
+void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
+{
+  // Get library
+  HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
+  if (!xInputLibrary)
+  {
+    return;
+  }
+  
+  // Link function call to library
+  *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
+  if (!XInputGetState)
+  {
+    return;
+  }
+  *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
+  if (!XInputSetState)
+  {
+    return;
+  }
+}
+
+
+void Win32::PoolGamepadInput(fn_XInputGetState* XInputGetState, AppState* appState)
+{
+  // Only attempt to read controller information if XInput is loaded
+  if (XInputGetState) 
+  {
+    for(int controllerIndex = 0; 
+        controllerIndex < XUSER_MAX_COUNT; 
+        controllerIndex++)
+    {
+      XINPUT_STATE controllerState;
+      if (XInputGetState(controllerIndex, &controllerState) == ERROR_SUCCESS)
+      {
+        XINPUT_GAMEPAD* systemGamepad = &controllerState.Gamepad;
+        Input::Gamepad* appGamepad = &(appState->app.gamepad[controllerIndex]);
+        appGamepad->dpadUp = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP) > 0;
+        appGamepad->dpadDown = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN) > 0;
+        appGamepad->dpadLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT) > 0;
+        appGamepad->dpadRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) > 0;
+        appGamepad->faceBottom = (systemGamepad->wButtons & XINPUT_GAMEPAD_A) > 0;
+        appGamepad->faceRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_B) > 0;
+        appGamepad->faceLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_X) > 0;
+        appGamepad->faceTop = (systemGamepad->wButtons & XINPUT_GAMEPAD_Y) > 0;
+        appGamepad->shoulderLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) > 0;
+        appGamepad->shoulderRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) > 0;
+        appGamepad->thumbstickLeft = (systemGamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB) > 0;
+        appGamepad->thumbstickRight = (systemGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) > 0;
+        appGamepad->start = (systemGamepad->wButtons & XINPUT_GAMEPAD_START) > 0;
+        appGamepad->select = (systemGamepad->wButtons & XINPUT_GAMEPAD_BACK) > 0;
+
+        appGamepad->triggerLeft = systemGamepad->bLeftTrigger;
+        appGamepad->triggerRight = systemGamepad->bRightTrigger;
+
+        appGamepad->xAxisLeft = systemGamepad->sThumbLX;
+        appGamepad->yAxisLeft = systemGamepad->sThumbLY;
+        
+        appGamepad->xAxisRight = systemGamepad->sThumbRX;
+        appGamepad->yAxisRight = systemGamepad->sThumbRY;
+      }
+      else
+      {
+        continue;
+      }
+    }
+  }
+}
+
+// Sound Services
+
 void Win32::InitDirectSoundBuffer(
   IDirectSoundBuffer** directSoundBuffer, 
   HWND window, 
-  Sound::Configuration config)
+  Sound::Configuration* soundCfg)
 {
   // Get library
   HMODULE directSoundLibrary = LoadLibraryA("dsound.dll");
@@ -106,7 +159,7 @@ void Win32::InitDirectSoundBuffer(
   ZeroMemory(&waveFormat, sizeof(waveFormat));
   waveFormat.wFormatTag = WAVE_FORMAT_PCM;
   waveFormat.nChannels = 2;
-  waveFormat.nSamplesPerSec = config.samplesPerSecond;
+  waveFormat.nSamplesPerSec = soundCfg->samplesPerSecond;
   waveFormat.wBitsPerSample = 16;
   waveFormat.nBlockAlign = 
       (waveFormat.nChannels * waveFormat.wBitsPerSample) / 8;
@@ -136,7 +189,7 @@ void Win32::InitDirectSoundBuffer(
   DSBUFFERDESC secondaryBufferDesc;
   ZeroMemory(&secondaryBufferDesc, sizeof(secondaryBufferDesc));
   secondaryBufferDesc.dwSize = sizeof(secondaryBufferDesc);
-  secondaryBufferDesc.dwBufferBytes = config.bufferSize;
+  secondaryBufferDesc.dwBufferBytes = soundCfg->bufferSize;
   secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
   if (directSoundObj->CreateSoundBuffer(
@@ -149,9 +202,10 @@ void Win32::InitDirectSoundBuffer(
 
 void Win32::ClearDirectSoundBuffer(
   IDirectSoundBuffer* directSoundBuffer, 
-  Sound::Configuration* config, 
+  Sound::Configuration* soundCfg, 
   DWORD lockCursor, 
-  DWORD bytesToWrite)
+  DWORD bytesToWrite
+)
 {
   void* region1;
   DWORD region1Size;
@@ -167,7 +221,7 @@ void Win32::ClearDirectSoundBuffer(
   }
   
   int16* destSample = (int16 *)region1;
-  DWORD region1SampleCount = region1Size/config->bytesPerSample;
+  DWORD region1SampleCount = region1Size/soundCfg->bytesPerSample;
   for (uint32 index = 0; index < region1SampleCount; index++)
   {
     // left
@@ -177,7 +231,7 @@ void Win32::ClearDirectSoundBuffer(
   }
   
   destSample = (int16 *)region2;
-  DWORD region2SampleCount = region2Size/config->bytesPerSample;
+  DWORD region2SampleCount = region2Size/soundCfg->bytesPerSample;
   for (uint32 index = 0; index < region2SampleCount; index++)
   {
     // left
@@ -192,7 +246,7 @@ void Win32::ClearDirectSoundBuffer(
 void Win32::FillDirectSoundBuffer(
   IDirectSoundBuffer* directSoundBuffer, 
   Sound::Buffer* sourceSoundBuffer,
-  Sound::Configuration* config, 
+  Sound::Configuration* soundCfg, 
   DWORD lockCursor, 
   DWORD bytesToWrite)
 {
@@ -211,7 +265,7 @@ void Win32::FillDirectSoundBuffer(
   
   int16* destSample = (int16 *)region1;
   int16* srcSample = sourceSoundBuffer->samples;
-  DWORD region1SampleCount = region1Size/config->bytesPerSample;
+  DWORD region1SampleCount = region1Size/soundCfg->bytesPerSample;
   for (
     uint32 index = 0;
     index < region1SampleCount && index < sourceSoundBuffer->sampleCount; 
@@ -222,11 +276,11 @@ void Win32::FillDirectSoundBuffer(
     *destSample++ = *srcSample++;
     // right
     *destSample++ = *srcSample++;
-    (config->runningSampleIndex)++;
+    (soundCfg->runningSampleIndex)++;
   }
   
   destSample = (int16 *)region2;
-  DWORD region2SampleCount = region2Size/config->bytesPerSample;
+  DWORD region2SampleCount = region2Size/soundCfg->bytesPerSample;
   for (
     uint32 index = 0; 
     index < region2SampleCount && index < sourceSoundBuffer->sampleCount; 
@@ -238,8 +292,47 @@ void Win32::FillDirectSoundBuffer(
     *destSample++ = *srcSample++;
     // right
     *destSample++ = *srcSample++;
-    (config->runningSampleIndex)++;
+    (soundCfg->runningSampleIndex)++;
   }
   
   directSoundBuffer->Unlock(region1, region1Size, region2, region2Size);
+}
+
+
+void Win32::GetDirectSoundState(
+  IDirectSoundBuffer* directSoundBuffer, 
+  Sound::Buffer* sourceSoundBuffer,
+  Sound::Configuration* soundCfg, 
+  DWORD* lockCursor, 
+  DWORD* bytesToWrite
+)
+{
+  // TODO: Move to function
+  DWORD playCursor = 0;
+  DWORD writeCursor = 0;
+
+  if (directSoundBuffer->GetCurrentPosition(&playCursor, &writeCursor) < 0)
+  {
+    // TODO: Log error
+    return;
+  }
+
+  // Keeps range within bufferSize values
+  *lockCursor = ((soundCfg->runningSampleIndex) * soundCfg->bytesPerSample) % soundCfg->bufferSize;
+
+  if (*lockCursor > playCursor)
+  {
+    // Gets space marked ====
+    // ||==============[PC]------------[LC]================||
+    *bytesToWrite = (soundCfg->bufferSize - *lockCursor);
+    *bytesToWrite += playCursor; 
+  }
+  else
+  {
+    // Gets space marked ====
+    // ||--------------[LC]============[PC]----------------||
+    *bytesToWrite = playCursor - *lockCursor;
+  }
+
+  sourceSoundBuffer->sampleCount = *bytesToWrite / soundCfg->bytesPerSample;
 }
