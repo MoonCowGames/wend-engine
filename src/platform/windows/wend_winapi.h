@@ -6,8 +6,8 @@
 +------------------------------------------------------------------------------+
 */
 
-#ifndef __WEND_WIN32_H__
-#define __WEND_WIN32_H__
+#ifndef __WEND_WINAPI_H__
+#define __WEND_WINAPI_H__
 
 #include <windows.h>
 #include <xinput.h>
@@ -97,4 +97,4 @@ namespace Win32
   void GetDirectSoundState(IDirectSoundBuffer*, Sound::Buffer*, Sound::Configuration*, DWORD*, DWORD*);
 }
 
-#endif //__WEND_WIN32_H__
+#endif //__WEND_WINAPI_H__

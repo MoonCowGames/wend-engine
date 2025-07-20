@@ -41,7 +41,7 @@ bool Input::CheckKeyWasReleased(uint8 state)
 void Input::PoolKeyState(uint8* keyState)
 {
   // TODO: Consider rethinking this. Queue keys on state change?
-  for (int keyIndex = 0; keyIndex < 256; keyIndex++)
+  for (int keyIndex = 0; keyIndex < MAX_KEYBOARD_SIZE; keyIndex++)
   {
     if (IsJustPressed(keyState[(Key)keyIndex]))
     {

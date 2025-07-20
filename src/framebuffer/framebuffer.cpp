@@ -15,14 +15,14 @@ void Render::RenderGradient(Render::Framebuffer* frameBuffer, int32 xOffset, int
 {
   int pitch = frameBuffer->width*4;
   uint8* row = (uint8*)frameBuffer->bitmap;
-  for(int y = 0; y < frameBuffer->height; ++y)
+  for(int y = 0; y < frameBuffer->height; y++)
   {
     uint32* pixel = (uint32*)row;
-    for(int x = 0; x < frameBuffer->width; ++x)
+    for(int x = 0; x < frameBuffer->width; x++)
     {
       *pixel = (uint8)(x+xOffset) << 16 | 
-              (uint8)(y+yOffset) << 8 | 
-              255;
+               (uint8)(y+yOffset) << 8 | 
+               255;
       ++pixel;
     }
     row += pitch;

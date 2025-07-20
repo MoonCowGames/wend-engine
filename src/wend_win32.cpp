@@ -26,6 +26,7 @@
  */
 
 #include "./platform/windows/wend_winapi.h"
+#include "./platform/windows/win_input.h"
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
@@ -80,16 +81,19 @@ int WINAPI WinMain(HINSTANCE instance,
   }
   
   // Create window.
+  DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+  RECT windowRect = {0, 0, width, height};
+  AdjustWindowRectEx(&windowRect, dwStyle, FALSE, 0);
 
   HWND window = CreateWindowExA(
       0,
       CLASS_NAME,
       "Wend Engine",
-      WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      1280,
-      720,
+      dwStyle,
+      0,
+      0,
+      windowRect.right - windowRect.left,
+      windowRect.bottom - windowRect.top,
       NULL,
       NULL,
       instance,
@@ -239,28 +243,20 @@ LRESULT CALLBACK WindowProc(HWND window,
     {
       uint8* keyState =  appState->app.keyboard.keyState;
 
-      //NOTE: Unsure if I want to keep map system for input.
-      const std::map<size_t, Key> map = appState->app.keyboard.keyMap;
-
+      
       if (wParam == VK_ESCAPE)
       {
         DestroyWindow(window);
       }
 
-      // Prevents out of bounds access in map
-      // Therefore, only registered keys are usable in map
-      if (map.find(wParam) == map.end())
+      // TODO: Change to event system
+      if ((lParam & (1 << 31)) == 0) // KeyDown
       {
-        return 0;
+        keyState[TranslateInput(wParam)] |= State::IS_PRESSED;
       }
-
-      if ((lParam & (1 << 31)) == 0) 
+      else  // KeyUp
       {
-        keyState[map.at(wParam)] |= State::IS_PRESSED;
-      }
-      else 
-      {
-        keyState[map.at(wParam)] ^= State::IS_PRESSED; 
+        keyState[TranslateInput(wParam)] ^= State::IS_PRESSED; 
       }
       return 0;
     }
