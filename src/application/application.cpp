@@ -11,11 +11,13 @@
 void App::InitApplication(Application* app)
 {
   app->isRunning = true;
+  
   app->keyboard = {0};
-  app->gamepad[0] = {0};
-  app->gamepad[1] = {0};
-  app->gamepad[2] = {0};
-  app->gamepad[3] = {0};
+  for (int i = 0; i < MAX_CONTROLLERS; i++)
+  {
+    app->gamepad[i] = {0};
+  }
+
   Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 }
 

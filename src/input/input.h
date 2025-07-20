@@ -18,6 +18,8 @@
 /// @note 128 maximum - Full sized keyboards have only 107 keys 
 const int32 MAX_KEYBOARD_SIZE = 128;
 
+const int32 MAX_CONTROLLERS = 4;
+
 enum State
 {
   IS_PRESSED = (1 << 0),
