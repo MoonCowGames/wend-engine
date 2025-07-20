@@ -11,7 +11,10 @@
 
 #include "framebuffer.h"
 
-void Render::RenderGradient(Render::Framebuffer* frameBuffer, int32 xOffset, int32 yOffset)
+void Render::RenderGradient(
+  Render::Framebuffer* frameBuffer, 
+  int32 xOffset, 
+  int32 yOffset)
 {
   int pitch = frameBuffer->width*4;
   uint8* row = (uint8*)frameBuffer->bitmap;

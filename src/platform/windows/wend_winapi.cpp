@@ -1,6 +1,6 @@
 /*
 +------------------------------------------------------------------------------+
-|File: win32.h                                                                 |
+|File: wend_winapi.h                                                           |
 |Author: Luna Artemis Dorn                                                     |
 |Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
 +------------------------------------------------------------------------------+
@@ -10,7 +10,10 @@
 
 // Window Services
 
-void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState)
+void Win32::BlitBuffer(
+  HDC deviceContext, 
+  HWND window, 
+  AppState* appState)
 {
   RECT clientRect = {};
   GetClientRect(window, &clientRect);
@@ -22,7 +25,10 @@ void Win32::BlitBuffer(HDC deviceContext, HWND window, Win32::AppState* appState
                 DIB_RGB_COLORS, SRCCOPY);
 }
 
-void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
+void Win32::OnResize(
+  AppState* appState, 
+  int16 width, 
+  int16 height)
 {
   if (appState->app.frameBuffer.bitmap)
   {
@@ -47,7 +53,9 @@ void Win32::OnResize(Win32::AppState* appState, int16 width, int16 height)
 
 // Gamepad Services
 
-void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
+void Win32::InitXInput(
+  fn_XInputGetState** XInputGetState, 
+  fn_XInputSetState** XInputSetState)
 {
   // Get library
   HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
@@ -70,7 +78,9 @@ void Win32::InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** X
 }
 
 
-void Win32::PoolGamepadInput(fn_XInputGetState* XInputGetState, AppState* appState)
+void Win32::PoolGamepadInput(
+  fn_XInputGetState* XInputGetState, 
+  AppState* appState)
 {
   // Only attempt to read controller information if XInput is loaded
   if (XInputGetState) 
@@ -119,8 +129,8 @@ void Win32::PoolGamepadInput(fn_XInputGetState* XInputGetState, AppState* appSta
 // Sound Services
 
 void Win32::InitDirectSoundBuffer(
-  IDirectSoundBuffer** directSoundBuffer, 
   HWND window, 
+  IDirectSoundBuffer** directSoundBuffer, 
   Sound::Configuration* soundCfg)
 {
   // Get library
@@ -204,8 +214,7 @@ void Win32::ClearDirectSoundBuffer(
   IDirectSoundBuffer* directSoundBuffer, 
   Sound::Configuration* soundCfg, 
   DWORD lockCursor, 
-  DWORD bytesToWrite
-)
+  DWORD bytesToWrite)
 {
   void* region1;
   DWORD region1Size;
@@ -287,7 +296,6 @@ void Win32::FillDirectSoundBuffer(
     index++
   )
   {
-    
     // left
     *destSample++ = *srcSample++;
     // right
@@ -304,10 +312,8 @@ void Win32::GetDirectSoundState(
   Sound::Buffer* sourceSoundBuffer,
   Sound::Configuration* soundCfg, 
   DWORD* lockCursor, 
-  DWORD* bytesToWrite
-)
+  DWORD* bytesToWrite)
 {
-  // TODO: Move to function
   DWORD playCursor = 0;
   DWORD writeCursor = 0;
 
@@ -335,4 +341,83 @@ void Win32::GetDirectSoundState(
   }
 
   sourceSoundBuffer->sampleCount = *bytesToWrite / soundCfg->bytesPerSample;
+}
+
+
+LRESULT CALLBACK Win32::WindowProc(
+  HWND window, 
+  UINT message, 
+  WPARAM wParam, 
+  LPARAM lParam)
+{
+  Win32::AppState* appState = NULL;
+  if (message == WM_CREATE)
+  {
+    CREATESTRUCT* create = (CREATESTRUCT*)lParam;
+    appState = (Win32::AppState*)(create->lpCreateParams);
+    SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)appState);
+  }
+  else
+  {
+    appState = (Win32::AppState*)(GetWindowLongPtr(window,GWLP_USERDATA));
+  }
+
+  switch (message)
+  {
+    case WM_SIZE:
+    {
+      return 0;
+    }
+    case WM_ACTIVATEAPP:
+    {
+      return 0;
+    }
+    case WM_CLOSE:
+    {
+      DestroyWindow(window);
+      return 0;
+    }
+    case WM_DESTROY:
+    {
+      appState->app.isRunning = false;
+      PostQuitMessage(0);
+      return 0;
+    }
+    case WM_PAINT:
+    {
+      // Paints on create and resize.
+      PAINTSTRUCT painter;
+      HDC deviceContext = BeginPaint(window, &painter);
+
+      Win32::BlitBuffer(deviceContext, window, appState);
+
+      EndPaint(window, &painter);
+      return 0;
+    }
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    {
+      uint8* keyState =  appState->app.keyboard.keyState;
+
+      
+      if (wParam == VK_ESCAPE)
+      {
+        DestroyWindow(window);
+      }
+
+      // TODO: Change to event system
+      if ((lParam & (1 << 31)) == 0) // KeyDown
+      {
+        keyState[Win32::TranslateInput(wParam)] |= State::IS_PRESSED;
+      }
+      else  // KeyUp
+      {
+        keyState[Win32::TranslateInput(wParam)] ^= State::IS_PRESSED; 
+      }
+      return 0;
+    }
+  }
+  return DefWindowProc(window, message, wParam, lParam);
 }

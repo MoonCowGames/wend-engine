@@ -1,6 +1,6 @@
 /*
 +------------------------------------------------------------------------------+
-|File: win_main.cpp                                                            |
+|File: wend_win32.cpp                                                          |
 |Author: Luna Artemis Dorn                                                     |
 |Notice: (C) Copyright 2025 of Luna Artemis Dorn. All Rights Reserved.         |
 +------------------------------------------------------------------------------+
@@ -25,13 +25,19 @@
   - Windows XP controller support
  */
 
-#include "./platform/windows/wend_winapi.h"
-#include "./platform/windows/win_input.h"
+/* 
+   TODO: Isolate and refactor platform independent code
+   - App - Should control size, 
+   - Keyboard - event system only
+   - Mouse and event system
+   - Gamepad and event system
+   - Framebuffer alloc - App should request to Win32 layer
+   - Soundbuffer alloc - App should request to Win32 layer
+*/
 
-LRESULT CALLBACK WindowProc(HWND window, 
-                            UINT message, 
-                            WPARAM wParam, 
-                            LPARAM lParam);
+// TODO: Collapse boilerplate into functions
+
+#include "./platform/windows/wend_winapi.h"
 
 /**
  * Windows GUI entrypoint.
@@ -71,7 +77,7 @@ int WINAPI WinMain(HINSTANCE instance,
 
   WNDCLASSA windowClass = {};
   windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-  windowClass.lpfnWndProc = WindowProc;
+  windowClass.lpfnWndProc = Win32::WindowProc;
   windowClass.hInstance = instance;
   windowClass.lpszClassName = CLASS_NAME;
 
@@ -106,7 +112,7 @@ int WINAPI WinMain(HINSTANCE instance,
   }
 
   IDirectSoundBuffer* directSoundBuffer = {}; 
-  Win32::InitDirectSoundBuffer(&directSoundBuffer, window, &(appState->app.soundCfg));
+  Win32::InitDirectSoundBuffer(window, &directSoundBuffer, &(appState->app.soundCfg));
   Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState->app.soundCfg), 0, appState->app.soundCfg.bufferSize);
   directSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
@@ -172,94 +178,8 @@ int WINAPI WinMain(HINSTANCE instance,
     {
       VirtualFree(appState->app.soundBuffer.samples, 0, MEM_RELEASE);
     }
-    free(appState); 
+    free(appState);
     appState = NULL;
   }
   return 0;
-}
-
-/**
- * Callback function required by Windows to allow GUI to recieve and interpret
- * messages from the OS.
- * 
- * @param window The handle to the GUI window that the callback is bound to.
- * @param message A value describing the type of message being received.
- * @param wParam A value determined by Windows and `message`.
- * @param lParam A value determined by Windows and `message`.
- */
-LRESULT CALLBACK WindowProc(HWND window, 
-                            UINT message, 
-                            WPARAM wParam, 
-                            LPARAM lParam)
-{
-  Win32::AppState* appState = NULL;
-  if (message == WM_CREATE)
-  {
-    CREATESTRUCT* create = (CREATESTRUCT*)lParam;
-    appState = (Win32::AppState*)(create->lpCreateParams);
-    SetWindowLongPtr(window, GWLP_USERDATA, (LONG_PTR)appState);
-  }
-  else
-  {
-    appState = (Win32::AppState*)(GetWindowLongPtr(window,GWLP_USERDATA));
-  }
-
-  switch (message)
-  {
-    case WM_SIZE:
-    {
-      return 0;
-    }
-    case WM_ACTIVATEAPP:
-    {
-      return 0;
-    }
-    case WM_CLOSE:
-    {
-      DestroyWindow(window);
-      return 0;
-    }
-    case WM_DESTROY:
-    {
-      appState->app.isRunning = false;
-      PostQuitMessage(0);
-      return 0;
-    }
-    case WM_PAINT:
-    {
-      // Paints on create and resize.
-      PAINTSTRUCT painter;
-      HDC deviceContext = BeginPaint(window, &painter);
-
-      Win32::BlitBuffer(deviceContext, window, appState);
-
-      EndPaint(window, &painter);
-      return 0;
-    }
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    {
-      uint8* keyState =  appState->app.keyboard.keyState;
-
-      
-      if (wParam == VK_ESCAPE)
-      {
-        DestroyWindow(window);
-      }
-
-      // TODO: Change to event system
-      if ((lParam & (1 << 31)) == 0) // KeyDown
-      {
-        keyState[TranslateInput(wParam)] |= State::IS_PRESSED;
-      }
-      else  // KeyUp
-      {
-        keyState[TranslateInput(wParam)] ^= State::IS_PRESSED; 
-      }
-      return 0;
-    }
-  }
-  return DefWindowProc(window, message, wParam, lParam);
 }

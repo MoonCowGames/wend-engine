@@ -37,9 +37,13 @@ namespace Sound
     int32 sampleCount;
   };
 
-  void InitSoundBuffer(Sound::Buffer *soundBuffer, Sound::Configuration *soundCfg);
+  void InitSoundBuffer(
+      Sound::Buffer *soundBuffer, 
+      Sound::Configuration *soundCfg);
 
-  void FillSoundBuffer(Sound::Buffer *soundBuffer, Sound::Configuration *soundCfg);
+  void FillSoundBuffer(
+      Sound::Buffer *soundBuffer, 
+      Sound::Configuration *soundCfg);
 }
 
 #endif //__WEND_SOUND_H__

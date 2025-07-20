@@ -43,7 +43,7 @@ namespace App
        * @param height Height of window in pixels.
        * @return Returns pointer to the application being initialised.
        */
-  void InitApplication(Application*);
+  void InitApplication(Application* app);
 
       /**
        * Processes per-frame changes of entities.

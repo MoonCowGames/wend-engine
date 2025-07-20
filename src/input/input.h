@@ -207,19 +207,19 @@ namespace Input
 
       ///@param state Input state bitfield.
       ///@return Returns true if key is released, else false.
-  bool IsReleased(uint8);
+  bool IsReleased(uint8 state);
 
       ///@param state Input state bitfield.
       ///@return Returns true only if key is released this frame but last frame it was not, else false.
-  bool IsJustReleased(uint8);
+  bool IsJustReleased(uint8 state);
 
       ///@param state Input state bitfield.
       ///@return Returns true if key was released, else false.
-  bool CheckKeyWasReleased(uint8);
+  bool CheckKeyWasReleased(uint8 state);
 
       ///@brief Iterates keys and updates with changes.
       ///@param keyState Array of input state bitfields.
-  void PoolKeyState(uint8*);
+  void PoolKeyState(uint8* state);
 }
 
 #endif //__WEND_INPUT_H__
