@@ -6,7 +6,7 @@
 +------------------------------------------------------------------------------+
 */
 
-#include "win32.h"
+#include "wend_winapi.h"
 
 // Window Services
 
@@ -267,8 +267,8 @@ void Win32::FillDirectSoundBuffer(
   int16* srcSample = sourceSoundBuffer->samples;
   DWORD region1SampleCount = region1Size/soundCfg->bytesPerSample;
   for (
-    uint32 index = 0;
-    index < region1SampleCount && index < sourceSoundBuffer->sampleCount; 
+    int32 index = 0;
+    index < (int32)region1SampleCount && index < sourceSoundBuffer->sampleCount; 
     index++
   )
   {
@@ -282,8 +282,8 @@ void Win32::FillDirectSoundBuffer(
   destSample = (int16 *)region2;
   DWORD region2SampleCount = region2Size/soundCfg->bytesPerSample;
   for (
-    uint32 index = 0; 
-    index < region2SampleCount && index < sourceSoundBuffer->sampleCount; 
+    int32 index = 0; 
+    index < (int32)region2SampleCount && index < sourceSoundBuffer->sampleCount; 
     index++
   )
   {

@@ -27,7 +27,7 @@ void Sound::FillSoundBuffer(Sound::Buffer *soundBuffer, Sound::Configuration *so
 {
   static float32 time;
   int16* sample = soundBuffer->samples;
-  for (uint32 i = 0; i < soundBuffer->sampleCount; i++)
+  for (int32 i = 0; i < soundBuffer->sampleCount; i++)
   {
     int16 sampleValue = (int16)(sinf(time) * 4000);
     // left

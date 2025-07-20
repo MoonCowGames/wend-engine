@@ -156,7 +156,7 @@ namespace Input
     uint8 keyState[256];
     
     // creates a hashmap pairing between virtual key and custom keycode. 
-    // cross-platform function
+    // NOTE: This is still Windows specific
     static const inline std::map<size_t, Key> keyMap = {
       {0x00, Key::NONE}, 
       

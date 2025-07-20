@@ -25,7 +25,7 @@
   - Windows XP controller support
  */
 
-#include "./platform/windows/win32.h"
+#include "./platform/windows/wend_winapi.h"
 
 LRESULT CALLBACK WindowProc(HWND window, 
                             UINT message, 
@@ -151,7 +151,7 @@ int WINAPI WinMain(HINSTANCE instance,
     Win32::BlitBuffer(deviceContext, window, appState);
     ReleaseDC(window, deviceContext);
 
-    QueryPerformanceCounter(&currentCoundter);
+    QueryPerformanceCounter(&currentCounter);
     int64 counterElapsed = currentCounter.QuadPart - lastCounter.QuadPart;
     deltaTime = (float32)counterElapsed / counterFrequency.QuadPart;
 
