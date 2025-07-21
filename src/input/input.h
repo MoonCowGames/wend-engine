@@ -33,7 +33,7 @@ enum Key
   NONE = 0x00,
 
   // Command keys
-  ESCAPE    = 0x01,
+  ESCAPE    = 0x01, 
   ENTER     = 0x02,
   SPACE     = 0x03,
   BACKSPACE = 0x04,
@@ -164,6 +164,19 @@ namespace Input
   {
     /// @brief Uses 8 bit bitfield to determine state (6 bits unused)
     uint8 keyState[MAX_KEYBOARD_SIZE] = {0};
+  };
+
+  struct Mouse
+  {
+    int32 xPos = 0;
+    int32 yPos = 0;
+    int32 wheelDelta = 0;
+
+    uint8 leftButton = 0;
+    uint8 rightButton = 0;
+    uint8 middleButton = 0;
+    uint8 thumb1Button = 0;
+    uint8 thumb2Button = 0;
   };
 
   struct Gamepad

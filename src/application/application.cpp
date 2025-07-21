@@ -13,11 +13,14 @@ void App::InitApplication(Application* app)
   app->isRunning = true;
   
   app->keyboard = {0};
+  app->mouse = {0};
   for (int i = 0; i < MAX_CONTROLLERS; i++)
   {
     app->gamepad[i] = {0};
   }
 
+  // TODO: FrameBuffer should init here. Should make request to platform layer to alloc.
+  // TODO: Soundbuffer should also make request to platform layer to alloc.
   Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 }
 
@@ -55,4 +58,8 @@ void App::FrameUpdate(Application* app, float32 deltaTime)
   Render::RenderGradient(&(app->frameBuffer), xOffset, yOffset);
 
   Sound::FillSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
+
+  std::cout << app->mouse.wheelDelta << std::endl; 
+  
+  app->mouse.wheelDelta = 0;
 }

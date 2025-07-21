@@ -1,6 +1,6 @@
 #include "win_input.h"
 
-Key Win32::TranslateInput(WPARAM winKey)
+Key Win32::TranslateKeyboard(WPARAM winKey)
 {
   switch (winKey)
   {

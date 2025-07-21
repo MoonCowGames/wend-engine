@@ -10,6 +10,7 @@
 #define __WEND_WINAPI_H__
 
 #include <windows.h>
+#include <windowsx.h>
 #include <xinput.h>
 
 #include "win_input.h"

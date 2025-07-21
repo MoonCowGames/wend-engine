@@ -394,14 +394,12 @@ LRESULT CALLBACK Win32::WindowProc(
       EndPaint(window, &painter);
       return 0;
     }
+    
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
     case WM_KEYDOWN:
     case WM_KEYUP:
-    {
-      uint8* keyState =  appState->app.keyboard.keyState;
-
-      
+    {      
       if (wParam == VK_ESCAPE)
       {
         DestroyWindow(window);
@@ -410,12 +408,85 @@ LRESULT CALLBACK Win32::WindowProc(
       // TODO: Change to event system
       if ((lParam & (1 << 31)) == 0) // KeyDown
       {
-        keyState[Win32::TranslateInput(wParam)] |= State::IS_PRESSED;
+        appState->app.keyboard.keyState[Win32::TranslateKeyboard(wParam)] |= State::IS_PRESSED;
       }
       else  // KeyUp
       {
-        keyState[Win32::TranslateInput(wParam)] ^= State::IS_PRESSED; 
+        appState->app.keyboard.keyState[Win32::TranslateKeyboard(wParam)] ^= State::IS_PRESSED; 
       }
+      return 0;
+    }
+
+    case WM_MOUSEMOVE:
+    {
+      appState->app.mouse.xPos = GET_X_LPARAM(lParam);
+      appState->app.mouse.yPos = GET_Y_LPARAM(lParam);
+      return 0;
+    }
+
+    case WM_LBUTTONDOWN:
+    {
+      appState->app.mouse.leftButton |= State::IS_PRESSED;
+      return 0;
+    }
+    case WM_LBUTTONUP:
+    {
+      appState->app.mouse.leftButton ^= State::IS_PRESSED;
+      return 0;
+    }
+    
+    case WM_RBUTTONDOWN:
+    {
+      appState->app.mouse.rightButton |= State::IS_PRESSED;
+      return 0;
+    }
+    case WM_RBUTTONUP:
+    {
+      appState->app.mouse.rightButton ^= State::IS_PRESSED;
+      return 0;
+    }
+
+    case WM_MBUTTONDOWN:
+    {
+      appState->app.mouse.middleButton |= State::IS_PRESSED;
+      return 0;
+    }
+    case WM_MBUTTONUP:
+    {
+      appState->app.mouse.middleButton ^= State::IS_PRESSED;
+      return 0;
+    }
+
+    case WM_XBUTTONDOWN:
+    {
+      int32 xButton = GET_XBUTTON_WPARAM(wParam);
+      if (xButton == XBUTTON1)
+      {
+        appState->app.mouse.thumb1Button |= State::IS_PRESSED;
+      }
+      else if (xButton == XBUTTON2)
+      {
+        appState->app.mouse.thumb2Button |= State::IS_PRESSED;
+      }
+      return 1;
+    }
+    case WM_XBUTTONUP:
+    {
+      int32 xButton = GET_XBUTTON_WPARAM(wParam);
+      if (xButton == XBUTTON1)
+      {
+        appState->app.mouse.thumb1Button ^= State::IS_PRESSED;
+      }
+      else if (xButton == XBUTTON2)
+      {
+        appState->app.mouse.thumb2Button ^= State::IS_PRESSED;
+      }
+      return 1;
+    }
+
+    case WM_MOUSEWHEEL:
+    {
+      appState->app.mouse.wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
       return 0;
     }
   }
