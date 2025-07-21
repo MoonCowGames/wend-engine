@@ -389,6 +389,14 @@ bool Win32::CreateWin32Window(
   return true;
 }
 
+void Win32::InitBitmapHeader(BITMAPINFOHEADER *bmiHeader)
+{
+  bmiHeader->biSize = sizeof(*bmiHeader);
+  bmiHeader->biPlanes = 1;
+  bmiHeader->biBitCount = 32;
+  bmiHeader->biCompression = BI_RGB;
+}
+
 LRESULT CALLBACK Win32::WindowProc(
   HWND window, 
   UINT message, 

@@ -51,47 +51,41 @@ int WINAPI WinMain(HINSTANCE instance,
                   PSTR cmdLine,
                   int cmdShow)
 {
-  // Does this need to be malloced?
-  Win32::AppState* appState = (Win32::AppState*)malloc(sizeof(Win32::AppState));
-  App::InitApplication(&(appState->app));
+  Win32::AppState appState;
+  App::InitApplication(&(appState.app));
   
-  int width = appState->app.width;
-  int height = appState->app.height;
+  int width = appState.app.width;
+  int height = appState.app.height;
 
-  appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
-  appState->bitmapInfo.bmiHeader.biPlanes = 1;
-  appState->bitmapInfo.bmiHeader.biBitCount = 32;
-  appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
+  Win32::InitBitmapHeader(&(appState.bitmapInfo.bmiHeader));
 
   // TODO: Move to request from app
-  appState->app.soundBuffer.samples = (int16 *)VirtualAlloc(
+  appState.app.soundBuffer.samples = (int16 *)VirtualAlloc(
     0, 
-    appState->app.soundCfg.bufferSize, 
+    appState.app.soundCfg.bufferSize, 
     MEM_RESERVE | MEM_COMMIT, 
     PAGE_READWRITE
   );
   
-  Win32::OnResize(appState, width, height);
+  Win32::OnResize(&appState, width, height);
   
   const char CLASS_NAME[] = "Wend Class";
-  
   WNDCLASSA windowClass = {0};
   if (!Win32::RegisterWindowClass(&windowClass, instance, CLASS_NAME))
   {
     // TODO: Log/Handle fail
     return 0;
   }
-  
   HWND window = {0};
-  if (!Win32::CreateWin32Window(&window, appState, instance, CLASS_NAME))
+  if (!Win32::CreateWin32Window(&window, &appState, instance, CLASS_NAME))
   {
     // TODO: Log/Handle fail
     return 0;
   }
 
   IDirectSoundBuffer* directSoundBuffer = {0}; 
-  Win32::InitDirectSoundBuffer(window, &directSoundBuffer, &(appState->app.soundCfg));
-  Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState->app.soundCfg), 0, appState->app.soundCfg.bufferSize);
+  Win32::InitDirectSoundBuffer(window, &directSoundBuffer, &(appState.app.soundCfg));
+  Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState.app.soundCfg), 0, appState.app.soundCfg.bufferSize);
   directSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
   fn_XInputGetState* XInputGetState = nullptr;
@@ -99,7 +93,7 @@ int WINAPI WinMain(HINSTANCE instance,
   Win32::InitXInput(&XInputGetState, &XInputSetState);
   if (!XInputGetState || !XInputSetState)
   {
-    // TODO: Log xinput dll not found
+    // TODO: Log/Handle xinput dll not found
   }
 
   ShowWindow(window, cmdShow);
@@ -114,7 +108,7 @@ int WINAPI WinMain(HINSTANCE instance,
   QueryPerformanceCounter(&currentCounter);
   lastCounter.QuadPart = currentCounter.QuadPart;
 
-  while (appState->app.isRunning)
+  while (appState.app.isRunning)
   {
     MSG message = {};
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
@@ -123,19 +117,19 @@ int WINAPI WinMain(HINSTANCE instance,
       DispatchMessage(&message);
     }
 
-    PoolGamepadInput(XInputGetState, appState);
+    Win32::PoolGamepadInput(XInputGetState, &appState);
 
     DWORD lockCursor = 0;
     DWORD bytesToWrite = 0;
 
-    Win32::GetDirectSoundState(directSoundBuffer, &(appState->app.soundBuffer), &(appState->app.soundCfg), &lockCursor, &bytesToWrite);
+    Win32::GetDirectSoundState(directSoundBuffer, &(appState.app.soundBuffer), &(appState.app.soundCfg), &lockCursor, &bytesToWrite);
 
-    App::FrameUpdate(&(appState->app), deltaTime);
+    App::FrameUpdate(&(appState.app), deltaTime);
     
-    Win32::FillDirectSoundBuffer(directSoundBuffer, &(appState->app.soundBuffer), &(appState->app.soundCfg), lockCursor, bytesToWrite);
+    Win32::FillDirectSoundBuffer(directSoundBuffer, &(appState.app.soundBuffer), &(appState.app.soundCfg), lockCursor, bytesToWrite);
 
     HDC deviceContext = GetDC(window);
-    Win32::BlitBuffer(deviceContext, window, appState);
+    Win32::BlitBuffer(deviceContext, window, &appState);
     ReleaseDC(window, deviceContext);
 
     QueryPerformanceCounter(&currentCounter);
@@ -146,18 +140,13 @@ int WINAPI WinMain(HINSTANCE instance,
   }
 
   // Clean up
-  if (appState) 
-  { 
-    if (appState->app.frameBuffer.bitmap)
-    {
-      VirtualFree(appState->app.frameBuffer.bitmap, 0, MEM_RELEASE);
-    }
-    if (appState->app.soundBuffer.samples)
-    {
-      VirtualFree(appState->app.soundBuffer.samples, 0, MEM_RELEASE);
-    }
-    free(appState);
-    appState = NULL;
+  if (appState.app.frameBuffer.bitmap)
+  {
+    VirtualFree(appState.app.frameBuffer.bitmap, 0, MEM_RELEASE);
+  }
+  if (appState.app.soundBuffer.samples)
+  {
+    VirtualFree(appState.app.soundBuffer.samples, 0, MEM_RELEASE);
   }
   return 0;
 }

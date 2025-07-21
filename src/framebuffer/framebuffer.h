@@ -16,9 +16,9 @@ namespace Render
       /// @struct Framebuffer Manages state of the platform-independent framebuffer
   struct Framebuffer
   {
-    void* bitmap;
-    int16 width;
-    int16 height;
+    void* bitmap = 0;
+    int16 width = 0;
+    int16 height = 0;
   };
   
       // NOTE: This will change or be removed. No docstring needed.

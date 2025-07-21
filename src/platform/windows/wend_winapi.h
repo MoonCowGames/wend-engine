@@ -35,8 +35,8 @@ namespace Win32
       /// @struct AppState Provides Windows with a handle to the application and associated data.
   struct AppState
   {
-    App::Application app;
-    BITMAPINFO bitmapInfo;
+    App::Application app = {0};
+    BITMAPINFO bitmapInfo = {0};
   };
 
       /// @brief Displays the framebuffer on the window.
@@ -144,6 +144,10 @@ namespace Win32
     AppState* appstate,
     HINSTANCE instance,
     const char* className);
+
+      /// @brief Init BITMAPINFOHEADER for Windows
+      /// @param bmiHeader Header to init
+  void InitBitmapHeader(BITMAPINFOHEADER* bmiHeader);
 
       /// @brief Callback function required by Windows to allow GUI to recieve and interpret messages from the OS.
       /// @param window The handle to the GUI window.

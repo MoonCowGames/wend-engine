@@ -22,19 +22,19 @@ namespace Sound
       /// @struct Configuration Manages state of the platform-independent audio buffer
   struct Configuration
   {
-    int32 samplesPerSecond;
-    int32 frequency;
-    int32 volume;
-    int32 wavePeriod;
-    int32 bytesPerSample;
-    int32 bufferSize;
-    uint32 runningSampleIndex;
+    int32 samplesPerSecond = 0;
+    int32 frequency = 0;
+    int32 volume = 0;
+    int32 wavePeriod = 0;
+    int32 bytesPerSample = 0;
+    int32 bufferSize = 0;
+    uint32 runningSampleIndex = 0;
   };
 
   struct Buffer
   {
-    int16 *samples;
-    int32 sampleCount;
+    int16 *samples = 0;
+    int32 sampleCount = 0;
   };
 
   void InitSoundBuffer(
