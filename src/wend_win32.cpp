@@ -52,11 +52,12 @@ int WINAPI WinMain(HINSTANCE instance,
                   PSTR cmdLine,
                   int cmdShow)
 {
-  int width = 1280;
-  int height = 720;
-
+  
   Win32::AppState* appState = (Win32::AppState*)malloc(sizeof(Win32::AppState));
   App::InitApplication(&(appState->app));
+  
+  int width = appState->app.width;
+  int height = appState->app.height;
 
   appState->bitmapInfo.bmiHeader.biSize = sizeof(appState->bitmapInfo.bmiHeader);
   appState->bitmapInfo.bmiHeader.biPlanes = 1;

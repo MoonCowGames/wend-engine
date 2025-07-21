@@ -21,20 +21,26 @@ namespace App
   /// @struct Application Manages state of the platform-independent application
   struct Application
   {
+    // Window
+    int32 xPos = 0;
+    int32 yPos = 0;
+    int32 width = 0;
+    int32 height = 0;
+
     // Input
-    Input::Keyboard keyboard;
-    Input::Mouse mouse;
-    Input::Gamepad gamepad[4];
+    Input::Keyboard keyboard = {0};
+    Input::Mouse mouse = {0};
+    Input::Gamepad gamepad[4] = {0};
 
     // Rendering
-    Render::Framebuffer frameBuffer;
+    Render::Framebuffer frameBuffer = {0};
 
     // TODO: Add Audio service
-    Sound::Buffer soundBuffer;
-    Sound::Configuration soundCfg;
+    Sound::Buffer soundBuffer = {0};
+    Sound::Configuration soundCfg = {0};
 
     // State
-    bool isRunning;
+    bool isRunning = false;
   };
 
       /**

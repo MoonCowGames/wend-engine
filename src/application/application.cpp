@@ -10,7 +10,11 @@
 
 void App::InitApplication(Application* app)
 {
-  app->isRunning = true;
+  // TODO: Give dev control of pos and size
+  app->xPos = 0;
+  app->yPos = 0;
+  app->width = 1280;
+  app->height = 720;
   
   app->keyboard = {0};
   app->mouse = {0};
@@ -18,10 +22,12 @@ void App::InitApplication(Application* app)
   {
     app->gamepad[i] = {0};
   }
-
+  
   // TODO: FrameBuffer should init here. Should make request to platform layer to alloc.
   // TODO: Soundbuffer should also make request to platform layer to alloc.
   Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
+  
+  app->isRunning = true;
 }
 
 void App::FrameUpdate(Application* app, float32 deltaTime)
