@@ -27,10 +27,9 @@
 
 /* 
    TODO: Isolate and refactor platform independent code
-   - App - Should control size, 
    - Keyboard - event system only
-   - Mouse and event system
-   - Gamepad and event system
+   - Mouse - event system only
+   - Gamepad - event system only
    - Framebuffer alloc - App should request to Win32 layer
    - Soundbuffer alloc - App should request to Win32 layer
 */
@@ -52,7 +51,7 @@ int WINAPI WinMain(HINSTANCE instance,
                   PSTR cmdLine,
                   int cmdShow)
 {
-  
+  // Does this need to be malloced?
   Win32::AppState* appState = (Win32::AppState*)malloc(sizeof(Win32::AppState));
   App::InitApplication(&(appState->app));
   
@@ -64,6 +63,7 @@ int WINAPI WinMain(HINSTANCE instance,
   appState->bitmapInfo.bmiHeader.biBitCount = 32;
   appState->bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
+  // TODO: Move to request from app
   appState->app.soundBuffer.samples = (int16 *)VirtualAlloc(
     0, 
     appState->app.soundCfg.bufferSize, 
@@ -73,46 +73,23 @@ int WINAPI WinMain(HINSTANCE instance,
   
   Win32::OnResize(appState, width, height);
   
-  // Register window class.
   const char CLASS_NAME[] = "Wend Class";
-
-  WNDCLASSA windowClass = {};
-  windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-  windowClass.lpfnWndProc = Win32::WindowProc;
-  windowClass.hInstance = instance;
-  windowClass.lpszClassName = CLASS_NAME;
-
-  if (!RegisterClassA(&windowClass))
+  
+  WNDCLASSA windowClass = {0};
+  if (!Win32::RegisterWindowClass(&windowClass, instance, CLASS_NAME))
   {
+    // TODO: Log/Handle fail
     return 0;
   }
   
-  // Create window.
-  DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-  RECT windowRect = {0, 0, width, height};
-  AdjustWindowRectEx(&windowRect, dwStyle, FALSE, 0);
-
-  HWND window = CreateWindowExA(
-      0,
-      CLASS_NAME,
-      "Wend Engine",
-      dwStyle,
-      0,
-      0,
-      windowRect.right - windowRect.left,
-      windowRect.bottom - windowRect.top,
-      NULL,
-      NULL,
-      instance,
-      appState
-  );
-
-  if (window == NULL)
+  HWND window = {0};
+  if (!Win32::CreateWin32Window(&window, appState, instance, CLASS_NAME))
   {
+    // TODO: Log/Handle fail
     return 0;
   }
 
-  IDirectSoundBuffer* directSoundBuffer = {}; 
+  IDirectSoundBuffer* directSoundBuffer = {0}; 
   Win32::InitDirectSoundBuffer(window, &directSoundBuffer, &(appState->app.soundCfg));
   Win32::ClearDirectSoundBuffer(directSoundBuffer, &(appState->app.soundCfg), 0, appState->app.soundCfg.bufferSize);
   directSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
@@ -127,16 +104,15 @@ int WINAPI WinMain(HINSTANCE instance,
 
   ShowWindow(window, cmdShow);
   UpdateWindow(window);
+  
+  float32 deltaTime = 0.0f;
 
-  LARGE_INTEGER counterFrequency;
-  QueryPerformanceFrequency(&counterFrequency);
-
+  LARGE_INTEGER counterFrequency = {0};
   LARGE_INTEGER currentCounter = {0};
   LARGE_INTEGER lastCounter = {0};
+  QueryPerformanceFrequency(&counterFrequency);
   QueryPerformanceCounter(&currentCounter);
   lastCounter.QuadPart = currentCounter.QuadPart;
-
-  float32 deltaTime = 0.0f;
 
   while (appState->app.isRunning)
   {
@@ -169,6 +145,7 @@ int WINAPI WinMain(HINSTANCE instance,
     lastCounter.QuadPart = currentCounter.QuadPart;
   }
 
+  // Clean up
   if (appState) 
   { 
     if (appState->app.frameBuffer.bitmap)

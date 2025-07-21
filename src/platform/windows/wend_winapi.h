@@ -49,8 +49,8 @@ namespace Win32
     HWND window, 
     AppState* appState);
 
-      /// Prepares Windows' XInput library and prepares function pointers 
-      /// to XInput API. Allows for dynamic function loading in case end-user does
+      /// Prepares Windows' XInput library and prepares function pointers .
+      /// to XInput API. Allows for dynamic function loading in case end-user does.
       /// not have the required XInput dll installed.
       /// 
       /// @param XInputGetState Function pointer to load XInput function into. Used to get the current state of a controller.
@@ -59,7 +59,7 @@ namespace Win32
     fn_XInputGetState** XInputGetState, 
     fn_XInputSetState** XInputSetState);
 
-      /// @brief Checks and updates state of each controller
+      /// @brief Checks and updates state of each controller.
       /// @param XInputGetState Function pointer to load XInput function into. Used to get the current state of a controller.
       /// @param appState Provides Windows with a handle to the application and associated data.
   void PoolGamepadInput(
@@ -67,7 +67,7 @@ namespace Win32
     AppState* appState);
 
       /// @brief Changes size allocated in memory for the framebuffer bitmap when the window resizes.
-      /// @param appState Struct containing framebuffer and BITMAPINFO.
+      /// @param appState Struct containing app data.
       /// @param width The new width of the window.
       /// @param height The new height of the window.
   void OnResize(
@@ -99,7 +99,7 @@ namespace Win32
     DWORD lockCursor, 
     DWORD bytesToWrite);
 
-      /// @brief Zeroes out sound buffer
+      /// @brief Zeroes out sound buffer.
       /// @param directSoundBuffer Windows sound buffer.
       /// @param soundCfg Platform independant sound config format.
       /// @param lockCursor Determines the point of the buffer to lock and prepare to write to.
@@ -123,8 +123,30 @@ namespace Win32
     DWORD* lockCursor, 
     DWORD* bytesToWrite);
 
+      /// @brief Init and register Window Class.
+      /// @param windowClass Handle to window class.
+      /// @param instance Window instance.
+      /// @param className Identifier for window class.
+      /// @return false on fail, true on success.
+  bool RegisterWindowClass(
+    WNDCLASSA* windowClass, 
+    HINSTANCE instance, 
+    const char* className);
+
+      /// @brief Init and create Window.
+      /// @param window The handle to the GUI window.
+      /// @param appState Struct containing app data.
+      /// @param instance Window instance.
+      /// @param className Identifier for window class.
+      /// @return false on fail, true on success.
+  bool CreateWin32Window(
+    HWND* window,
+    AppState* appstate,
+    HINSTANCE instance,
+    const char* className);
+
       /// @brief Callback function required by Windows to allow GUI to recieve and interpret messages from the OS.
-      /// @param window The handle to the GUI window that the callback is bound to.
+      /// @param window The handle to the GUI window.
       /// @param message A value describing the type of message being received.
       /// @param wParam A value determined by Windows and `message`.
       /// @param lParam A value determined by Windows and `message`.

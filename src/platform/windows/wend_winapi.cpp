@@ -343,6 +343,51 @@ void Win32::GetDirectSoundState(
   sourceSoundBuffer->sampleCount = *bytesToWrite / soundCfg->bytesPerSample;
 }
 
+bool Win32::RegisterWindowClass(
+  WNDCLASSA* windowClass, 
+  HINSTANCE instance, 
+  const char* className)
+{
+  windowClass->style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+  windowClass->lpfnWndProc = Win32::WindowProc;
+  windowClass->hInstance = instance;
+  windowClass->lpszClassName = className;
+  
+  return RegisterClassA(windowClass);
+}
+
+bool Win32::CreateWin32Window(
+  HWND* window,
+  AppState* appState,
+  HINSTANCE instance,
+  const char* className)
+{
+    // Create window.
+  DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+  RECT windowRect = {0, 0, appState->app.width, appState->app.height};
+  AdjustWindowRectEx(&windowRect, dwStyle, FALSE, 0);
+
+  *window = CreateWindowExA(
+      0,
+      className,
+      "Wend Engine",
+      dwStyle,
+      0,
+      0,
+      windowRect.right - windowRect.left,
+      windowRect.bottom - windowRect.top,
+      NULL,
+      NULL,
+      instance,
+      appState
+  );
+
+  if (window == NULL)
+  {
+    return false;
+  }
+  return true;
+}
 
 LRESULT CALLBACK Win32::WindowProc(
   HWND window, 
