@@ -34,18 +34,14 @@
    - Soundbuffer alloc - App should request to Win32 layer
 */
 
-// TODO: Collapse boilerplate into functions
-
 #include "./platform/windows/wend_winapi.h"
 
-/**
- * Windows GUI entrypoint.
- * 
- * @param instance A handle to the program's instance.
- * @param prevInstance UNUSED.
- * @param cmdLine UNUSED.
- * @param cmdShow Specifies how the window should be displayed. Used only when required.
- */
+
+    /// @brief GUI entrypoint.
+    /// @param instance A handle to the program's instance.
+    /// @param prevInstance UNUSED.
+    /// @param cmdLine UNUSED.
+    /// @param cmdShow Specifies how the window should be displayed. Used only when required.
 int WINAPI WinMain(HINSTANCE instance, 
                   HINSTANCE prevInstance, 
                   PSTR cmdLine,
