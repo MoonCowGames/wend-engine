@@ -30,10 +30,6 @@ typedef XINPUT_SET_STATE(fn_XInputSetState);
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID guiDevice, LPDIRECTSOUND* directSound, LPUNKNOWN outer);
 typedef DIRECT_SOUND_CREATE(fn_DirectSoundCreate);
 
-#define KILOBYTE(x) (uint64)(x*1024)
-#define MEGABYTE(x) (uint64)(KILOBYTE(x)*1024)
-#define GIGABYTE(x) (uint64)(MEGABYTE(x)*1024)
-
 namespace Win32
 {
       /// @struct AppState Provides Windows with a handle to the application and associated data.
@@ -41,15 +37,6 @@ namespace Win32
   {
     App::Application app = {0};
     BITMAPINFO bitmapInfo = {0};
-  };
-
-  struct MemoryArena
-  {
-    void* permanent;
-    uint64 permanentSize;
-    
-    void* transient;
-    uint64 transientSize;
   };
 
       /// @brief Displays the framebuffer on the window.
@@ -162,7 +149,7 @@ namespace Win32
       /// @param bmiHeader Header to init
   void InitBitmapHeader(BITMAPINFOHEADER* bmiHeader);
 
-  void CreateMemoryArena(MemoryArena *memArena);
+  void CreateMemoryArena(App::MemoryArena *memArena);
 
       /// @brief Callback function required by Windows to allow GUI to recieve and interpret messages from the OS.
       /// @param window The handle to the GUI window.

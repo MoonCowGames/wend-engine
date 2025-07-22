@@ -26,6 +26,9 @@ void App::InitApplication(Application* app)
   // TODO: FrameBuffer should init here. Should make request to platform layer to alloc.
   // TODO: Soundbuffer should also make request to platform layer to alloc.
   Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
+
+  app->memory.permanentSize = MEGABYTE(64);
+  app->memory.transientSize = MEGABYTE(512);
   
   app->isRunning = true;
 }

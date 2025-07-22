@@ -51,13 +51,8 @@ int WINAPI WinMain(HINSTANCE instance,
   App::InitApplication(&(appState.app));
   
   // NOTE: This has no use until we know how to get memory out of the arena
-  /* 
-  Win32::MemoryArena memArena = {0};
-  memArena.permanentSize = MEGABYTE(64);
-  memArena.transientSize = MEGABYTE(512);
-
-  CreateMemoryArena(&memArena); 
-  */
+  // TODO: Implement memory arena delivery mechanism
+  //Win32::CreateMemoryArena(&(appState.app.memory)); 
 
   int width = appState.app.width;
   int height = appState.app.height;

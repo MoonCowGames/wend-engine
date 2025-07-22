@@ -16,8 +16,23 @@
 #include "../sound/sound.h"
 #include "../misc/includes.h"
 
+// TODO: Move these to appropriate file
+#define KILOBYTE(x) (uint64)(x*1024)
+#define MEGABYTE(x) (uint64)(KILOBYTE(x)*1024)
+#define GIGABYTE(x) (uint64)(MEGABYTE(x)*1024)
+
 namespace App
 {
+  // TODO: Move to memory file
+  struct MemoryArena
+  {
+    void* permanent;
+    uint64 permanentSize;
+    
+    void* transient;
+    uint64 transientSize;
+  };
+
   /// @struct Application Manages state of the platform-independent application
   struct Application
   {
@@ -35,9 +50,11 @@ namespace App
     // Rendering
     Render::Framebuffer frameBuffer = {0};
 
-    // TODO: Add Audio service
+    // Sound
     Sound::Buffer soundBuffer = {0};
     Sound::Configuration soundCfg = {0};
+
+    App::MemoryArena memory = {0};
 
     // State
     bool isRunning = false;
