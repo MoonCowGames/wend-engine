@@ -50,12 +50,21 @@ int WINAPI WinMain(HINSTANCE instance,
   Win32::AppState appState;
   App::InitApplication(&(appState.app));
   
+  // NOTE: This has no use until we know how to get memory out of the arena
+  /* 
+  Win32::MemoryArena memArena = {0};
+  memArena.permanentSize = MEGABYTE(64);
+  memArena.transientSize = MEGABYTE(512);
+
+  CreateMemoryArena(&memArena); 
+  */
+
   int width = appState.app.width;
   int height = appState.app.height;
 
   Win32::InitBitmapHeader(&(appState.bitmapInfo.bmiHeader));
 
-  // TODO: Move to request from app
+  // TODO: Move to request from app / arena
   appState.app.soundBuffer.samples = (int16 *)VirtualAlloc(
     0, 
     appState.app.soundCfg.bufferSize, 
