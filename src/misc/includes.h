@@ -7,14 +7,13 @@
 */
 
 #ifndef __WEND_INCLUDES_H__
-#define __WEND_INCLUDE_H__
+#define __WEND_INCLUDES_H__
 
 // C/C++ std libs
 #include <iostream>
 #include <cstdint>
 #include <cstdlib>
-#include <map>
 
 #include "typedefs.h"
 
-#endif //__WEND_INCLUDE_H__
+#endif //__WEND_INCLUDES_H__

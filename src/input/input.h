@@ -14,11 +14,11 @@
 
 #include "../misc/includes.h"
 
-#define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
-typedef XINPUT_GET_STATE(fn_XInputGetState);
+/// @brief Maximum number of keys to track state of
+/// @note 128 maximum - Full sized keyboards have only 107 keys 
+const int32 MAX_KEYBOARD_SIZE = 128;
 
-#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
-typedef XINPUT_SET_STATE(fn_XInputSetState);
+const int32 MAX_CONTROLLERS = 4;
 
 enum State
 {
@@ -26,12 +26,14 @@ enum State
   WAS_PRESSED = (1 << 1), 
 };
 
+/// @brief Maps int values to name of keyboard keys
+/// @note Should additional keys be added, cannot exceed 0xFF - must fit in 256 size array
 enum Key
 {
   NONE = 0x00,
 
   // Command keys
-  ESCAPE    = 0x01,
+  ESCAPE    = 0x01, 
   ENTER     = 0x02,
   SPACE     = 0x03,
   BACKSPACE = 0x04,
@@ -58,22 +60,22 @@ enum Key
   RIGHT     = 0x1B,
  
   // Operator Keys
-  MULT      = 0x20,
-  PLUS      = 0x21,
-  MINUS     = 0x22,
-  DIVIDE    = 0x23,
-  DECM      = 0x24,
-  HYPHEN    = 0x25,
-  EQUAL     = 0x26,
-  LBRACE    = 0x27,
-  RBRACE    = 0x28,
-  SLASH     = 0x29,
-  BACKSLASH = 0x2A,
-  COLON     = 0x2B,
-  QUOTE     = 0x2C,
-  COMMA     = 0x2D,
-  PERIOD    = 0x2E,
-  TILDE     = 0x2F,
+  NUM_MULT      = 0x1C,
+  NUM_PLUS      = 0x1D,
+  NUM_MINUS     = 0x1E,
+  NUM_DIVIDE    = 0x1F,
+  NUM_DECIMAL   = 0x20,
+  HYPHEN    = 0x21,
+  EQUAL     = 0x22,
+  LBRACE    = 0x23,
+  RBRACE    = 0x24,
+  SLASH     = 0x25,
+  BACKSLASH = 0x26,
+  COLON     = 0x27,
+  QUOTE     = 0x28,
+  COMMA     = 0x29,
+  PERIOD    = 0x2A,
+  TILDE     = 0x2B,
 
   // Numeric Keys (Match ANSI)
   KP_0 = 0x30,
@@ -127,7 +129,7 @@ enum Key
   NUM8 = 0x68,
   NUM9 = 0x69,
   
-  // Function Keys
+  // Function Keys F1-F12
   F1  = 0x71,
   F2  = 0x72,
   F3  = 0x73,
@@ -140,105 +142,97 @@ enum Key
   F10 = 0x7A,
   F11 = 0x7B,
   F12 = 0x7C,
-  F13 = 0x7D,
-  F14 = 0x7E,
-  F15 = 0x7F,
-  F16 = 0x80,
-  F17 = 0x81,
-  F18 = 0x82,
-  F19 = 0x83,
-  F20 = 0x84,
-  F21 = 0x85,
-  F22 = 0x86,
-  F23 = 0x87,
-  F24 = 0x88,
+
+  // Function Keys F13-F24 (unaligned to pack into max size of 128)
+  F13 = 0x2C,
+  F14 = 0x2D,
+  F15 = 0x2E,
+  F16 = 0x2F,
+  F17 = 0x3A,
+  F18 = 0x3B,
+  F19 = 0x3C,
+  F20 = 0x3D,
+  F21 = 0x3E,
+  F22 = 0x3F,
+  F23 = 0x40,
+  F24 = 0x5B,
 };
 
 namespace Input
 {
-
   struct Keyboard
   {
-    uint8 keyState[256];
-    
-    // creates a hashmap pairing between virtual key and custom keycode. 
-    // cross-platform function
-    static const inline std::map<size_t, Key> keyMap = {
-      {0x00, Key::NONE}, 
-      
-      {'A', Key::A}, {'B', Key::B}, {'C', Key::C}, 
-      {'D', Key::D}, {'E', Key::E}, {'F', Key::F},
-      {'G', Key::G}, {'H', Key::H}, {'I', Key::I},
-      {'J', Key::J}, {'K', Key::K}, {'L', Key::L},
-      {'M', Key::M}, {'N', Key::N}, {'O', Key::O},
-      {'P', Key::P}, {'Q', Key::Q}, {'R', Key::R},
-      {'S', Key::S}, {'T', Key::T}, {'U', Key::U},
-      {'V', Key::V}, {'W', Key::W}, {'X', Key::X},
-      {'Y', Key::Y}, {'Z', Key::Z},
-
-      {'0', Key::KP_0}, {'1', Key::KP_1},
-      {'2', Key::KP_2}, {'3', Key::KP_3},
-      {'4', Key::KP_4}, {'5', Key::KP_5},
-      {'6', Key::KP_6}, {'7', Key::KP_7},
-      {'8', Key::KP_8}, {'9', Key::KP_9},
-
-      {VK_NUMPAD0, Key::NUM0}, {VK_NUMPAD1, Key::NUM1},
-      {VK_NUMPAD2, Key::NUM2}, {VK_NUMPAD3, Key::NUM3},
-      {VK_NUMPAD4, Key::NUM4}, {VK_NUMPAD5, Key::NUM5},
-      {VK_NUMPAD6, Key::NUM6}, {VK_NUMPAD7, Key::NUM7},
-      {VK_NUMPAD8, Key::NUM8}, {VK_NUMPAD9, Key::NUM9},
-
-      {VK_F1, Key::F1},   {VK_F2, Key::F2},
-      {VK_F3, Key::F3},   {VK_F4, Key::F4},
-      {VK_F5, Key::F5},   {VK_F6, Key::F6},
-      {VK_F7, Key::F7},   {VK_F8, Key::F8},
-      {VK_F9, Key::F9},   {VK_F10, Key::F10},
-      {VK_F11, Key::F11}, {VK_F12, Key::F12},
-      {VK_F11, Key::F13}, {VK_F12, Key::F14},
-      {VK_F11, Key::F15}, {VK_F12, Key::F16},
-      {VK_F11, Key::F17}, {VK_F12, Key::F18},
-      {VK_F11, Key::F19}, {VK_F12, Key::F20},
-      {VK_F11, Key::F21}, {VK_F12, Key::F22},
-      {VK_F11, Key::F23}, {VK_F12, Key::F24},
-
-      {VK_MULTIPLY, Key::MULT}, {VK_ADD, Key::PLUS}, 
-      {VK_DIVIDE, Key::DIVIDE}, {VK_SUBTRACT, Key::MINUS}, 
-      {VK_DECIMAL, Key::DECM},
-
-      {VK_BACK, Key::BACKSPACE}, {VK_ESCAPE, Key::ESCAPE}, 
-      {VK_RETURN, Key::ENTER},   {VK_TAB, Key::TAB}, 
-      {VK_DELETE, Key::DEL},     {VK_HOME, Key::HOME},
-      {VK_END, Key::END},        {VK_PRIOR, Key::PAGEUP}, 
-      {VK_NEXT, Key::PAGEDOWN},  {VK_INSERT, Key::INS},
-      {VK_SHIFT, Key::SHIFT},    {VK_CONTROL, Key::CTRL},
-      {VK_SPACE, Key::SPACE},    {VK_NUMLOCK, Key::NUMLOCK},
-      {VK_PAUSE, Key::PAUSE},    {VK_CAPITAL, Key::CAPSLOCK},
-      {VK_SCROLL, Key::SCROLL},  {VK_MENU, Key::ALT},
-      {VK_LWIN, Key::SUPER},     {VK_RWIN, Key::SUPER},
-      {VK_APPS, Key::MENU},
-
-      {VK_OEM_1, Key::COLON},       {VK_OEM_2, Key::SLASH},
-      {VK_OEM_3, Key::TILDE},       {VK_OEM_4, Key::LBRACE},
-      {VK_OEM_5, Key::BACKSLASH},   {VK_OEM_6, Key::RBRACE},
-      {VK_OEM_7, Key::QUOTE},       {VK_OEM_PLUS, Key::EQUAL},
-      {VK_OEM_COMMA, Key::COMMA},   {VK_OEM_MINUS, Key::MINUS},
-      {VK_OEM_PERIOD, Key::PERIOD}, {VK_CAPITAL, Key::CAPSLOCK},
-
-      {VK_UP, Key::UP},     {VK_DOWN, Key::DOWN}, 
-      {VK_LEFT, Key::LEFT}, {VK_RIGHT, Key::RIGHT},
-    };
+    /// @brief Uses 8 bit bitfield to determine state (6 bits unused)
+    uint8 keyState[MAX_KEYBOARD_SIZE] = {0};
   };
 
-  bool CheckKeyIsPressed(uint8);
-  bool CheckKeyWasPressed(uint8);
-  bool CheckKeyIsHeld(uint8);
-  bool CheckKeyIsJustPressed(uint8);
-  bool CheckKeyIsReleased(uint8);
-  bool CheckKeyIsJustReleased(uint8);
+  struct Mouse
+  {
+    int32 xPos = 0;
+    int32 yPos = 0;
+    int32 wheelDelta = 0;
 
-  void PoolKeyState(uint8*);
+    uint8 leftButton = 0;
+    uint8 rightButton = 0;
+    uint8 middleButton = 0;
+    uint8 thumb1Button = 0;
+    uint8 thumb2Button = 0;
+  };
 
-  void InitXInput(fn_XInputGetState**, fn_XInputSetState**);
+  struct Gamepad
+  {
+    uint8 dpadUp = 0;
+    uint8 dpadDown = 0;
+    uint8 dpadLeft = 0;
+    uint8 dpadRight = 0;
+    uint8 faceBottom = 0;
+    uint8 faceRight = 0;
+    uint8 faceLeft = 0;
+    uint8 faceTop = 0;
+    uint8 shoulderLeft = 0;
+    uint8 shoulderRight = 0;
+    uint8 thumbstickLeft = 0;
+    uint8 thumbstickRight = 0;
+    uint8 start = 0;
+    uint8 select;
+
+    uint8 triggerLeft = 0;
+    uint8 triggerRight = 0;
+
+    int16 xAxisLeft = 0;
+    int16 yAxisLeft = 0;
+    
+    int16 xAxisRight = 0;
+    int16 yAxisRight = 0;
+  };
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key is pressed, else false.
+  bool IsPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key was pressed, else false.
+  bool WasPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true only if key is pressed this frame but last frame it was not, else false.
+  bool IsJustPressed(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key is released, else false.
+  bool IsReleased(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true only if key is released this frame but last frame it was not, else false.
+  bool IsJustReleased(uint8 state);
+
+      ///@param state Input state bitfield.
+      ///@return Returns true if key was released, else false.
+  bool CheckKeyWasReleased(uint8 state);
+
+      ///@brief Iterates keys and updates with changes.
+      ///@param keyState Array of input state bitfields.
+  void PoolKeyState(uint8* state);
 }
 
 #endif //__WEND_INPUT_H__

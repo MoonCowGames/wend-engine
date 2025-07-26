@@ -8,47 +8,65 @@
 
 #include "application.h"
 
-namespace App
+void App::InitApplication(Application* app)
 {
+  // TODO: Give dev control of pos and size
+  app->xPos = 0;
+  app->yPos = 0;
+  app->width = 1280;
+  app->height = 720;
   
-  /**
-   * Allocates and creates an instance of an Application struct.
-   * 
-   * @param width Width of window in pixels.
-   * @param height Height of window in pixels.
-   * @return Returns pointer to the application being initialised.
-   */
-  Application* InitApplication(int width, int height)
+  app->keyboard = {0};
+  app->mouse = {0};
+  for (int i = 0; i < MAX_CONTROLLERS; i++)
   {
-    Application* app = (Application*)malloc(sizeof(Application));
-    app->isRunning = true;
+    app->gamepad[i] = {0};
+  }
+  
+  // TODO: FrameBuffer should init here. Should make request to platform layer to alloc.
+  // TODO: Soundbuffer should also make request to platform layer to alloc.
+  Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 
-    app->bitmapInfo.bmiHeader.biSize = sizeof(app->bitmapInfo.bmiHeader);
-    app->bitmapInfo.bmiHeader.biPlanes = 1;
-    app->bitmapInfo.bmiHeader.biBitCount = 32;
-    app->bitmapInfo.bmiHeader.biCompression = BI_RGB;
-    app->bitmapInfo.bmiHeader.biWidth = width;
-    app->bitmapInfo.bmiHeader.biHeight = -height;
+  app->memory.permanentSize = MEGABYTE(64);
+  app->memory.transientSize = MEGABYTE(512);
+  
+  app->isRunning = true;
+}
 
-    app->buffer.width = width;
-    app->buffer.height = height;
-    Render::ResizeFramebuffer(&(app->buffer), width, height);
-    
-    for (int index = 0; index < 256; index++)
-    {
-      app->keyboard.keyState[index] = 0;
-    }
+void App::FrameUpdate(Application* app, float32 deltaTime)
+{
+  static int xOffset = 0;
+  static int yOffset = 0;
 
-    return app;
+  uint8* keyState = app->keyboard.keyState;
+  Input::PoolKeyState(keyState);
+
+  if (Input::IsPressed(keyState[Key::W]) ||
+      Input::IsPressed(keyState[Key::UP]))
+  {
+    yOffset++;
+  }
+  if (Input::IsPressed(keyState[Key::S]) ||
+      Input::IsPressed(keyState[Key::DOWN]))
+  {
+    yOffset--;
+  }
+  if (Input::IsPressed(keyState[Key::A]) ||
+      Input::IsPressed(keyState[Key::LEFT]))
+  {
+    xOffset++;
+  }
+  if (Input::IsPressed(keyState[Key::D]) ||
+      Input::IsPressed(keyState[Key::RIGHT]))
+  {
+    xOffset--;
   }
 
-  /**
-   * Processes per-frame changes of entities.
-   * 
-   * @param deltaTime The time in seconds between the last two frames
-   */
-  void FrameUpdate(float32 deltaTime)
-  {
-    // TODO: Process per-frame changes.
-  }
+  // TODO: Test controller in Application
+
+  Render::RenderGradient(&(app->frameBuffer), xOffset, yOffset);
+
+  Sound::FillSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
+  
+  app->mouse.wheelDelta = 0;
 }

@@ -13,24 +13,68 @@
 
 #include "../framebuffer/framebuffer.h"
 #include "../input/input.h"
+#include "../sound/sound.h"
 #include "../misc/includes.h"
+
+// TODO: Move these to appropriate file
+#define KILOBYTE(x) (uint64)(x*1024)
+#define MEGABYTE(x) (uint64)(KILOBYTE(x)*1024)
+#define GIGABYTE(x) (uint64)(MEGABYTE(x)*1024)
 
 namespace App
 {
-  struct Application
+  // TODO: Move to memory file
+  struct MemoryArena
   {
-    Input::Keyboard keyboard;
-
-    // Rendering
-    Render::Framebuffer buffer;
-    BITMAPINFO bitmapInfo;
-
-    // State
-    bool isRunning;
+    void* permanent;
+    uint64 permanentSize;
+    
+    void* transient;
+    uint64 transientSize;
   };
 
-  Application* InitApplication(int, int);
-  void FrameUpdate(float32 deltaTime);
+  /// @struct Application Manages state of the platform-independent application
+  struct Application
+  {
+    // Window
+    int32 xPos = 0;
+    int32 yPos = 0;
+    int32 width = 0;
+    int32 height = 0;
+
+    // Input
+    Input::Keyboard keyboard = {0};
+    Input::Mouse mouse = {0};
+    Input::Gamepad gamepad[4] = {0};
+
+    // Rendering
+    Render::Framebuffer frameBuffer = {0};
+
+    // Sound
+    Sound::Buffer soundBuffer = {0};
+    Sound::Configuration soundCfg = {0};
+
+    App::MemoryArena memory = {0};
+
+    // State
+    bool isRunning = false;
+  };
+
+      /**
+       * Allocates and creates an instance of an Application struct.
+       * 
+       * @param width Width of window in pixels.
+       * @param height Height of window in pixels.
+       * @return Returns pointer to the application being initialised.
+       */
+  void InitApplication(Application* app);
+
+      /**
+       * Processes per-frame changes of entities.
+       * 
+       * @param deltaTime The time in seconds between the last two frames
+       */
+  void FrameUpdate(Application* app, float32 deltaTime);
 }
 
 #endif //__WEND_APPLICATION_H__

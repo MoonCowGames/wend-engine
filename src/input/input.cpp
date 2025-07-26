@@ -8,100 +8,48 @@
 
 #include "input.h"
 
-namespace Input
+bool Input::IsPressed(uint8 state)
 {
-  ///@param state Input state bitfield.
-  ///@return Returns true if key is pressed, else false.
-  bool CheckKeyIsPressed(uint8 state)
-  {
-    return (state & State::IS_PRESSED) != 0;
-  }
+  return (state & State::IS_PRESSED) != 0;
+}
 
-  ///@param state Input state bitfield.
-  ///@return Returns true if key was pressed, else false.
-  bool CheckKeyWasPressed(uint8 state)
-  {
-    return (state & State::WAS_PRESSED) != 0;
-  }
+bool Input::WasPressed(uint8 state)
+{
+  return (state & State::WAS_PRESSED) != 0;
+}
 
-  ///@param state Input state bitfield.
-  ///@return Returns true only if key is pressed this frame but last frame it was not, else false.
-  bool CheckKeyIsJustPressed(uint8 state)
-  {
-    return CheckKeyIsPressed(state) && !CheckKeyWasPressed(state);
-  }
+bool Input::IsJustPressed(uint8 state)
+{
+  return IsPressed(state) && !WasPressed(state);
+}
 
-  ///@param state Input state bitfield.
-  ///@return Returns true if key is released, else false.
-  bool CheckKeyIsReleased(uint8 state)
-  {
-    return (state & State::IS_PRESSED) == 0;
-  }
+bool Input::IsReleased(uint8 state)
+{
+  return (state & State::IS_PRESSED) == 0;
+}
 
-  ///@param state Input state bitfield.
-  ///@return Returns true if key was released, else false.
-  bool CheckKeyWasReleased(uint8 state)
-  {
-    return (state & State::WAS_PRESSED) == 0;
-  }
+bool Input::IsJustReleased(uint8 state)
+{
+  return IsReleased(state) && !CheckKeyWasReleased(state);
+}
 
-  ///@param state Input state bitfield.
-  ///@return Returns true only if key is released this frame but last frame it was not, else false.
-  bool CheckKeyIsJustReleased(uint8 state)
-  {
-    return CheckKeyIsReleased(state) && !CheckKeyWasReleased(state);
-  }
+bool Input::CheckKeyWasReleased(uint8 state)
+{
+  return (state & State::WAS_PRESSED) == 0;
+}
 
-  /**
-   * Loops through all indexes in the keyState array and updates the WAS_PRESSED
-   * state of the key to reflect any changes.
-   * 
-   * @param keyState Array of input state bitfields.
-   */
-  void PoolKeyState(uint8* keyState)
+void Input::PoolKeyState(uint8* keyState)
+{
+  // TODO: Consider rethinking this. Queue keys on state change?
+  for (int keyIndex = 0; keyIndex < MAX_KEYBOARD_SIZE; keyIndex++)
   {
-    for (int keyIndex = 0; keyIndex < 256; keyIndex++)
+    if (IsJustPressed(keyState[(Key)keyIndex]))
     {
-      if (Input::CheckKeyIsJustPressed(keyState[(Key)keyIndex]))
-      {
-        keyState[(Key)keyIndex] |= State::WAS_PRESSED;
-      }
-      else if (Input::CheckKeyIsJustReleased(keyState[(Key)keyIndex]))
-      {
-        keyState[(Key)keyIndex] &= ~(State::WAS_PRESSED);
-      }
+      keyState[(Key)keyIndex] |= State::WAS_PRESSED;
     }
-  }
-  
-  /**
-   * Prepares Windows' XInput library and prepares function pointers 
-   * to XInput API. Allows for dynamic function loading in case end-user does
-   * not have the required XInput dll installed.
-   * 
-   * @param XInputGetState Function pointer to load XInput function into.
-   * Used to get the current state of a controller.
-   * @param XInputSetState Function pointer to load XInput function into.
-   * Used to set state of a controller for vibration.
-   */
-  void InitXInput(fn_XInputGetState** XInputGetState, fn_XInputSetState** XInputSetState)
-  {
-    // Get library
-    HMODULE xInputLibrary = LoadLibraryA("xinput1_3.dll");
-    if (!xInputLibrary)
+    else if (IsJustReleased(keyState[(Key)keyIndex]))
     {
-      return;
-    }
-
-    // Link function call to library
-    *XInputGetState = (fn_XInputGetState *)GetProcAddress(xInputLibrary, "XInputGetState");
-    if (!XInputGetState)
-    {
-      return;
-    }
-    *XInputSetState = (fn_XInputSetState *)GetProcAddress(xInputLibrary, "XInputSetState");
-    if (!XInputSetState)
-    {
-      return;
+      keyState[(Key)keyIndex] &= ~(State::WAS_PRESSED);
     }
   }
 }
