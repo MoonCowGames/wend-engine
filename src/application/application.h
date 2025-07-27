@@ -14,9 +14,9 @@
 #include "../framebuffer/framebuffer.h"
 #include "../input/input.h"
 #include "../sound/sound.h"
+#include "../memory/memory_arena.h"
 #include "../misc/includes.h"
 #include "../misc/typedefs.h"
-
 
 namespace App
 {
@@ -51,7 +51,8 @@ namespace App
     Sound::Buffer soundBuffer = {0};
     Sound::Configuration soundCfg = {0};
 
-    App::MemoryArena memory = {0};
+    Memory::Arena permanentArena = {0};
+    Memory::Arena transientArena = {0};
 
     // State
     bool isRunning = false;

@@ -27,14 +27,17 @@ void App::InitApplication(Application* app)
   // TODO: Soundbuffer should also make request to platform layer to alloc.
   Sound::InitSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
 
-  app->memory.permanentSize = MEGABYTE(64);
-  app->memory.transientSize = MEGABYTE(512);
+  Memory::ArenaAlloc(&(app->permanentArena), MEGABYTE(64));
+  Memory::ArenaAlloc(&(app->transientArena), MEGABYTE(512));
   
   app->isRunning = true;
 }
 
 void App::FrameUpdate(Application* app, float32 deltaTime)
 {
+  Memory::Arena frameArena;
+  Memory::SubArenaAlloc(&frameArena, &(app->transientArena), MEGABYTE(64)); 
+
   static int xOffset = 0;
   static int yOffset = 0;
 
@@ -69,4 +72,6 @@ void App::FrameUpdate(Application* app, float32 deltaTime)
   Sound::FillSoundBuffer(&(app->soundBuffer), &(app->soundCfg));
   
   app->mouse.wheelDelta = 0;
+
+  Memory::ArenaPop(&(app->transientArena), frameArena.size);
 }
