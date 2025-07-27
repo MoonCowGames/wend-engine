@@ -15,11 +15,8 @@
 #include "../input/input.h"
 #include "../sound/sound.h"
 #include "../misc/includes.h"
+#include "../misc/typedefs.h"
 
-// TODO: Move these to appropriate file
-#define KILOBYTE(x) (uint64)(x*1024)
-#define MEGABYTE(x) (uint64)(KILOBYTE(x)*1024)
-#define GIGABYTE(x) (uint64)(MEGABYTE(x)*1024)
 
 namespace App
 {

@@ -11,6 +11,10 @@
 
 #include <cstdint>
 
+#define KILOBYTE(x) (uint64)(x*1024)
+#define MEGABYTE(x) (uint64)(KILOBYTE(x)*1024)
+#define GIGABYTE(x) (uint64)(MEGABYTE(x)*1024)
+
 typedef int8_t int8;
 typedef int16_t int16;
 typedef int32_t int32;
