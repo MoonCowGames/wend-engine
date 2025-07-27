@@ -20,17 +20,7 @@
 
 namespace App
 {
-  // TODO: Move to memory file
-  struct MemoryArena
-  {
-    void* permanent;
-    uint64 permanentSize;
-    
-    void* transient;
-    uint64 transientSize;
-  };
-
-  /// @struct Application Manages state of the platform-independent application
+    /// @struct Application Manages state of the platform-independent application
   struct Application
   {
     // Window
