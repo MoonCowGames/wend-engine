@@ -2,6 +2,7 @@
 #define __WEND_MEMORY_ARENA_H__
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "..\misc\typedefs.h"
 

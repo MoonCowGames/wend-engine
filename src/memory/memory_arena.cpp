@@ -11,7 +11,7 @@ void Memory::ArenaAlloc(Arena* arena, uint64 size)
     }
     arena->size = size;
     arena->position = (uint64)arena->storage;
-    // TODO: Zero mem
+    memset(arena->storage, 0, size);
   }
 }
 
@@ -43,7 +43,7 @@ void* Memory::ArenaPush(Arena* arena, uint64 size)
 void* Memory::ArenaPushZeroed(Arena* arena, uint64 size)
 {
   void* ptr = (void*)arena->position;
-  // TODO: Zero mem
+  memset(ptr, 0, size);
   arena->position += size;
   return ptr;
 }
@@ -51,17 +51,16 @@ void* Memory::ArenaPushZeroed(Arena* arena, uint64 size)
 void Memory::ArenaPop(Arena* arena, uint64 size)
 {
   arena->position -= size;
-  // TODO: Zero mem
 }
 
 void Memory::ArenaSetPosition(Arena* arena, uint64 position)
 {
+  uint64 diff = arena->position - position;
   arena->position = position;
-  // TODO: Zero mem
 }
 
 void Memory::ArenaClear(Arena* arena)
 {
   arena->position = (uint64)arena->storage;
-  // TODO: Zero mem
+  memset(arena->storage, 0, arena->size);
 }
