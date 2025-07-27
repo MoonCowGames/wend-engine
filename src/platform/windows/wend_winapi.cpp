@@ -397,17 +397,6 @@ void Win32::InitBitmapHeader(BITMAPINFOHEADER *bmiHeader)
   bmiHeader->biCompression = BI_RGB;
 }
 
-void Win32::CreateMemoryArena(App::MemoryArena *memArena)
-{
-    memArena->permanent = VirtualAlloc(
-      0, 
-      memArena->permanentSize + memArena->transientSize, 
-      MEM_RESERVE | MEM_COMMIT, 
-      PAGE_READWRITE
-    );
-    memArena->transient = (void *)((uint8*)memArena->permanent + memArena->permanentSize);
-}
-
 LRESULT CALLBACK Win32::WindowProc(
   HWND window, 
   UINT message, 

@@ -49,10 +49,6 @@ int WINAPI WinMain(HINSTANCE instance,
 {
   Win32::AppState appState;
   App::InitApplication(&(appState.app));
-  
-  // NOTE: This has no use until we know how to get memory out of the arena
-  // TODO: Implement memory arena delivery mechanism
-  //Win32::CreateMemoryArena(&(appState.app.memory)); 
 
   int width = appState.app.width;
   int height = appState.app.height;

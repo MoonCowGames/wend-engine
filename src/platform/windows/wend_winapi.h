@@ -149,8 +149,6 @@ namespace Win32
       /// @param bmiHeader Header to init
   void InitBitmapHeader(BITMAPINFOHEADER* bmiHeader);
 
-  void CreateMemoryArena(App::MemoryArena *memArena);
-
       /// @brief Callback function required by Windows to allow GUI to recieve and interpret messages from the OS.
       /// @param window The handle to the GUI window.
       /// @param message A value describing the type of message being received.
