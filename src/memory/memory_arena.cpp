@@ -25,7 +25,7 @@ void Memory::SubArenaAlloc(Arena* subArena, Arena* parentArena, uint64 size)
 
 void Memory::ArenaFree(Arena* arena)
 {
-  // TODO: Zero mem
+  memset(arena->storage, 0, arena->size);
   if (arena->storage)
   {
     free(arena->storage);
